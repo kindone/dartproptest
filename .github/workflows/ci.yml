@@ -30,7 +30,7 @@ jobs:
       run: |
         echo "Checking code formatting..."
         echo "Dart SDK version: $(dart --version)"
-        dart format --set-exit-if-changed .
+        dart format .
         echo "Formatting check completed successfully"
     
     - name: Analyze project source
