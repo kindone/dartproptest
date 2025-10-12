@@ -56,7 +56,7 @@ void main() {
 
 ## Documentation
 
-For comprehensive documentation, including core concepts, API reference, and advanced features, please visit the **[Documentation](docs/index.md)**.
+For comprehensive documentation, including core concepts, API reference, and advanced features, please visit the **[Documentation](doc/index.md)**.
 
 ## License
 

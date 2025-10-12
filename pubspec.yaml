@@ -20,7 +20,5 @@ topics:
   - testing
   - property-based-testing
   - quickcheck
-  - dart
-  - flutter
   - bdd
   - tdd
