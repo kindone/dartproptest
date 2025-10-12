@@ -9,7 +9,7 @@ bool simpleForAll(dynamic func, List<SimpleGenerator<dynamic>> gens) {
     final args = gens.map((gen) => gen.generate(random).value).toList();
 
     try {
-      final result = Function.apply(func, args);
+      final dynamic result = Function.apply(func as Function, args);
       if (result == false) {
         throw Exception('Property failed with args: $args');
       }

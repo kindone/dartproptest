@@ -32,7 +32,7 @@ void main() {
       final results = <int>[];
       for (int i = 0; i < 10; i++) {
         final result = elementGen.generate(rand);
-        results.add(result.value);
+        results.add(result.value as int);
       }
 
       // All results should be from the provided list
@@ -52,7 +52,7 @@ void main() {
       final results = <int>[];
       for (int i = 0; i < 20; i++) {
         final result = weightedGen.generate(rand);
-        results.add(result.value);
+        results.add(result.value as int);
       }
 
       // All results should be from the provided list
@@ -70,7 +70,7 @@ void main() {
       final results = <int>[];
       for (int i = 0; i < 10; i++) {
         final result = oneOfGen.generate(rand);
-        results.add(result.value);
+        results.add(result.value as int);
       }
 
       // All results should be from the provided generators
@@ -91,7 +91,7 @@ void main() {
       final results = <int>[];
       for (int i = 0; i < 20; i++) {
         final result = weightedOneOfGen.generate(rand);
-        results.add(result.value);
+        results.add(result.value as int);
       }
 
       // All results should be from the provided generators
@@ -313,23 +313,24 @@ void main() {
       // Create a triple where third number is between 0 and second number
       final tripleGen = chainTuple(pairGen, (pair) => interval(0, pair[1]));
       // Create a quadruple where fourth number is between 0 and third number
-      final quadGen = chainTuple(tripleGen, (triple) => interval(0, triple[2]));
+      final quadGen =
+          chainTuple(tripleGen, (triple) => interval(0, triple[2] as int));
 
       // Test that all numbers in the tuple follow the decreasing constraint
       forAllLegacy((List<dynamic> args) {
         final quad = args[0] as List<dynamic>;
         // First number must be 1-3
-        expect(quad[0], greaterThanOrEqualTo(1));
-        expect(quad[0], lessThanOrEqualTo(3));
+        expect(quad[0] as int, greaterThanOrEqualTo(1));
+        expect(quad[0] as int, lessThanOrEqualTo(3));
         // Second number must be 0 to first number
-        expect(quad[1], greaterThanOrEqualTo(0));
-        expect(quad[1], lessThanOrEqualTo(quad[0]));
+        expect(quad[1] as int, greaterThanOrEqualTo(0));
+        expect(quad[1] as int, lessThanOrEqualTo(quad[0] as int));
         // Third number must be 0 to second number
-        expect(quad[2], greaterThanOrEqualTo(0));
-        expect(quad[2], lessThanOrEqualTo(quad[1]));
+        expect(quad[2] as int, greaterThanOrEqualTo(0));
+        expect(quad[2] as int, lessThanOrEqualTo(quad[1] as int));
         // Fourth number must be 0 to third number
-        expect(quad[3], greaterThanOrEqualTo(0));
-        expect(quad[3], lessThanOrEqualTo(quad[2]));
+        expect(quad[3] as int, greaterThanOrEqualTo(0));
+        expect(quad[3] as int, lessThanOrEqualTo(quad[2] as int));
       }, [quadGen]);
     });
 
@@ -357,17 +358,17 @@ void main() {
       forAllLegacy((List<dynamic> args) {
         final quad = args[0] as List<dynamic>;
         // First number must be 1-3
-        expect(quad[0], greaterThanOrEqualTo(1));
-        expect(quad[0], lessThanOrEqualTo(3));
+        expect(quad[0] as int, greaterThanOrEqualTo(1));
+        expect(quad[0] as int, lessThanOrEqualTo(3));
         // Second number must be 0 to first number
-        expect(quad[1], greaterThanOrEqualTo(0));
-        expect(quad[1], lessThanOrEqualTo(quad[0]));
+        expect(quad[1] as int, greaterThanOrEqualTo(0));
+        expect(quad[1] as int, lessThanOrEqualTo(quad[0] as int));
         // Third number must be 0 to second number
-        expect(quad[2], greaterThanOrEqualTo(0));
-        expect(quad[2], lessThanOrEqualTo(quad[1]));
+        expect(quad[2] as int, greaterThanOrEqualTo(0));
+        expect(quad[2] as int, lessThanOrEqualTo(quad[1] as int));
         // Fourth number must be 0 to third number
-        expect(quad[3], greaterThanOrEqualTo(0));
-        expect(quad[3], lessThanOrEqualTo(quad[2]));
+        expect(quad[3] as int, greaterThanOrEqualTo(0));
+        expect(quad[3] as int, lessThanOrEqualTo(quad[2] as int));
       }, [quadGen]);
     });
   });

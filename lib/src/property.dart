@@ -94,8 +94,10 @@ class Property {
               true; // void functions that don't throw are considered successful
         } else {
           // Try to call as a generic function
-          final maybeResult = Function.apply(func, args);
-          result = maybeResult;
+          final maybeResult = Function.apply(func as Function, args);
+          // If the function returns a boolean, use it directly
+          // If it returns something else or null, consider it successful (no exception thrown)
+          result = maybeResult is bool ? maybeResult : true;
         }
 
         // Execute cleanup hook if defined and the function didn't throw
@@ -140,19 +142,16 @@ class Property {
         final propertyFunc = func as PropertyFunction;
         final maybeResult = propertyFunc(args);
         // Treat void return as success
-        if (maybeResult != null)
-          return maybeResult;
-        else
-          return true;
+        return maybeResult;
       } else if (func is PropertyFunctionVoid) {
         final propertyFunc = func as PropertyFunctionVoid;
         propertyFunc(args);
         return true; // void functions that don't throw are considered successful
       } else {
         // Try to call as a generic function
-        final maybeResult = Function.apply(func, args);
+        final maybeResult = Function.apply(func as Function, args);
         if (maybeResult != null)
-          return maybeResult;
+          return maybeResult is bool ? maybeResult : true;
         else
           return true;
       }
@@ -287,17 +286,16 @@ class Property {
         final maybeResult = propertyFunc(args);
 
         // Handle boolean return or void return
-        if (maybeResult != null) {
-          if (!maybeResult) return false; // Explicit false return means failure
-        }
+        if (!maybeResult) return false; // Explicit false return means failure
       } else if (func is PropertyFunctionVoid) {
         final propertyFunc = func as PropertyFunctionVoid;
         propertyFunc(args);
         // void functions that don't throw are considered successful
       } else {
         // Try to call as a generic function
-        final maybeResult = Function.apply(func, args);
-        if (maybeResult != null && !maybeResult) return false;
+        final maybeResult = Function.apply(func as Function, args);
+        if (maybeResult != null && maybeResult is bool && !maybeResult)
+          return false;
       }
 
       // Run cleanup only on success (true return or void return without exception)
