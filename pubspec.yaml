@@ -4,7 +4,7 @@ version: 0.1.0
 homepage: https://github.com/kindone/dartproptest
 repository: https://github.com/kindone/dartproptest
 issue_tracker: https://github.com/kindone/dartproptest/issues
-documentation: https://github.com/kindone/dartproptest/blob/main/docs/index.md
+documentation: https://github.com/kindone/dartproptest/blob/main/doc/index.md
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
