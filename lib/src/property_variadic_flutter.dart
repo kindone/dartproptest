@@ -1,7 +1,6 @@
 import 'generator.dart';
 import 'random.dart';
 import 'util/error.dart';
-import 'util/json.dart';
 
 /// Flutter-compatible main entry point for property-based testing.
 ///
@@ -46,7 +45,8 @@ bool forAll<T>(
       continue;
     } catch (e) {
       // Attempt to shrink the failing arguments
-      final shrinkResult = _shrinkFailingArgs(func, generators, savedRandom, e);
+      final shrinkResult =
+          _shrinkFailingArgs<dynamic>(func, generators, savedRandom, e);
       throw Exception(
           'Property failed with args: ${shrinkResult.args}\nError: $e');
     }
@@ -62,7 +62,7 @@ bool forAllVariadic<T>(
   int numRuns = 200,
   String seed = '',
 }) {
-  return forAll(func, generators, numRuns: numRuns, seed: seed);
+  return forAll<T>(func, generators, numRuns: numRuns, seed: seed);
 }
 
 /// Alternative implementation using a simpler approach without mirrors
@@ -73,7 +73,7 @@ bool forAllSimple<T>(
   int numRuns = 200,
   String seed = '',
 }) {
-  return forAll(func, generators, numRuns: numRuns, seed: seed);
+  return forAll<T>(func, generators, numRuns: numRuns, seed: seed);
 }
 
 /// Internal class to hold the results of a shrinking operation.
@@ -105,22 +105,4 @@ _ShrinkResult _shrinkFailingArgs<T>(
   // In a full implementation, this would attempt to shrink the arguments
   final args = gens.map((gen) => gen.generate(random).value).toList();
   return _ShrinkResult(args, originalError, null);
-}
-
-/// Formats a failure message with type information
-String _formatFailureMessage(
-  List<dynamic> args,
-  Object? error,
-) {
-  final buffer = StringBuffer();
-  buffer.writeln('Property failed with arguments:');
-
-  for (int i = 0; i < args.length; i++) {
-    buffer.writeln('  arg$i: ${JSONStringify.call(args[i])}');
-  }
-
-  if (error != null) {
-    buffer.writeln('Error: $error');
-  }
-  return buffer.toString();
 }

@@ -5,10 +5,10 @@ void main() {
   group('Stateful Examples', () {
     test('simple list system', () {
       // Initial state generator for a list
-      final listInitialGen = Gen.array(Gen.just(0), minLength: 0, maxLength: 5);
+      // final listInitialGen = Gen.array(Gen.just(0), minLength: 0, maxLength: 5);
 
       // Model factory
-      final listModelFactory = (List<int> obj) => obj.length;
+      // final listModelFactory = (List<int> obj) => obj.length;
 
       // Create actions for the list
       final addAction = Action<List<int>, int>((obj, model) {

@@ -183,7 +183,7 @@ void main() {
     });
 
     test('interval small range', () {
-      final rand = Random();
+      final rand = Random('42');
       final gen = interval(0, 1);
       const numGenerations = 10000;
       int num0 = 0;
@@ -276,7 +276,6 @@ void main() {
     });
 
     test('set generation', () {
-      final rand = Random('42');
       final elemGen = interval(0, 8);
       final gen = setGen(elemGen, 4, 8);
 
@@ -391,7 +390,6 @@ void main() {
 
     test('recursive generator', () {
       final rand = Random('42');
-
       // Define the recursive type: a node containing a number and optionally another node
       // Using Map to represent the node structure
       Generator<Map<String, dynamic>?> createNodeGen() {
@@ -431,7 +429,6 @@ void main() {
   group('Combinator Tests', () {
     test('combination utility', () {
       final rand = Random('42');
-
       int combination(int n, int r) {
         int result = 1;
         for (int i = 1; i <= r; i++) {
@@ -455,7 +452,6 @@ void main() {
 
     test('set shrink exhaustive', () {
       final rand = Random('42');
-
       int combination(int n, int r) {
         int result = 1;
         for (int i = 1; i <= r; i++) {
@@ -561,7 +557,6 @@ void main() {
 
     // TODO: Implement aggregate combinator
     // test('aggregate combinator', () {
-    //   final rand = Random('42');
     //   Generator<List<double>> gen1 = interval(0, 1).map((num) => [num]);
     //   final gen = gen1.aggregate(
     //     (nums) {
@@ -584,7 +579,6 @@ void main() {
 
     // TODO: Implement accumulate combinator
     // test('accumulate combinator', () {
-    //   final rand = Random('42');
     //   Generator<double> gen1 = interval(0, 2);
     //   final gen = gen1.accumulate((num) => interval(num, num + 2), 2, 4);
 
@@ -599,7 +593,6 @@ void main() {
     // });
 
     // test('accumulate many', () {
-    //   final rand = Random('42');
     //   Generator<double> gen1 = interval(0, 2);
     //   final gen = gen1.accumulate((num) => interval(num, num + 2), 2, 4);
 

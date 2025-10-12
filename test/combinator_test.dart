@@ -27,7 +27,7 @@ void main() {
 
     test('elementOf selects from provided values', () {
       final rand = Random('42');
-      final elementGen = elementOf([1, 2, 3, 4, 5]);
+      final elementGen = elementOf<int>([1, 2, 3, 4, 5]);
 
       final results = <int>[];
       for (int i = 0; i < 10; i++) {
@@ -43,7 +43,7 @@ void main() {
 
     test('elementOf with weighted values', () {
       final rand = Random('42');
-      final weightedGen = elementOf([
+      final weightedGen = elementOf<int>([
         weightedValue(1, 0.5), // 50% chance
         weightedValue(2, 0.3), // 30% chance
         3, // 20% chance (remaining)

@@ -25,7 +25,6 @@ class StatefulProperty<ObjectType, ModelType> {
   int _numRuns = 100;
   int _minActions = 1;
   int _maxActions = 100;
-  int _maxAllowedConsecutiveGenerationFailures = 20;
   bool _verbose = false;
   void Function()? _onStartup;
   void Function()? _onCleanup;
@@ -62,13 +61,6 @@ class StatefulProperty<ObjectType, ModelType> {
   /// Sets the maximum number of actions per sequence.
   StatefulProperty<ObjectType, ModelType> setMaxActions(int maxActions) {
     _maxActions = maxActions;
-    return this;
-  }
-
-  /// Sets the maximum allowed consecutive generation failures.
-  StatefulProperty<ObjectType, ModelType>
-      setMaxAllowedConsecutiveGenerationFailures(int maxFailures) {
-    _maxAllowedConsecutiveGenerationFailures = maxFailures;
     return this;
   }
 

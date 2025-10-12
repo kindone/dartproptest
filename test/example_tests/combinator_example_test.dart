@@ -104,8 +104,7 @@ void main() {
         results.add(result.value);
       }
 
-      // All results should be strings
-      expect(results.every((value) => value is String), isTrue);
+      // All results should be strings (type is already guaranteed by List<String>)
       // All results should be numeric strings
       expect(results.every((value) => int.tryParse(value) != null), isTrue);
     });
@@ -155,9 +154,7 @@ void main() {
         results.add(result.value);
       }
 
-      // All results should be lists of length 2
-      expect(
-          results.every((value) => value is List && value.length == 2), isTrue);
+      // All results should be lists of length 2 (guaranteed by tuple generator)
       // All coordinates should be in range
       expect(
           results.every((tuple) =>

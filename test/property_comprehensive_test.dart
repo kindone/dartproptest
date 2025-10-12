@@ -216,8 +216,8 @@ void main() {
     });
 
     test('property with seeded random', () {
-      final prop1 = Property((int a) => a >= 0).setSeed('42');
-      final prop2 = Property((int a) => a >= 0).setSeed('42');
+      // final prop1 = Property((int a) => a >= 0).setSeed('42');
+      // final prop2 = Property((int a) => a >= 0).setSeed('42');
 
       // Both should generate the same sequence
       final results1 = <int>[];

@@ -218,18 +218,14 @@ void main() {
         expect(() {
           forAll(
             (int a, String s, bool flag, double d, List<int> list) {
-              return a >= 0 &&
-                  s.isNotEmpty &&
-                  flag != null &&
-                  d >= 0.0 &&
-                  list.length >= 0;
+              return a >= 0 && s.isNotEmpty && d >= 0.0 && list.isNotEmpty;
             },
             [
               Gen.interval(0, 10),
               Gen.asciiString(minLength: 1, maxLength: 5),
               Gen.boolean(),
               Gen.float(),
-              Gen.array(Gen.interval(0, 5), minLength: 0, maxLength: 3),
+              Gen.array(Gen.interval(0, 5), minLength: 1, maxLength: 3),
             ],
             numRuns: 5,
           );
@@ -241,11 +237,7 @@ void main() {
         expect(() {
           forAll(
             (int a, String s, bool flag, double d, List<int> list) {
-              return a >= 0 &&
-                  s.isNotEmpty &&
-                  flag != null &&
-                  d >= 0.0 &&
-                  list.length >= 0;
+              return a >= 0 && s.isNotEmpty && d >= 0.0 && list.length >= 0;
             },
             [
               Gen.interval(0, 10),
@@ -261,18 +253,14 @@ void main() {
         expect(() {
           forAllSimple(
             (int a, String s, bool flag, double d, List<int> list) {
-              return a >= 0 &&
-                  s.isNotEmpty &&
-                  flag != null &&
-                  d >= 0.0 &&
-                  list.length >= 0;
+              return a >= 0 && s.isNotEmpty && d >= 0.0 && list.isNotEmpty;
             },
             [
               Gen.interval(0, 10),
               Gen.asciiString(minLength: 1, maxLength: 5),
               Gen.boolean(),
               Gen.float(),
-              Gen.array(Gen.interval(0, 5), minLength: 0, maxLength: 3),
+              Gen.array(Gen.interval(0, 5), minLength: 1, maxLength: 3),
             ],
             numRuns: 5,
           );
@@ -285,11 +273,7 @@ void main() {
         expect(() {
           forAllSimple(
             (int a, String s, bool flag, double d, List<int> list) {
-              return a >= 0 &&
-                  s.isNotEmpty &&
-                  flag != null &&
-                  d >= 0.0 &&
-                  list.length >= 0;
+              return a >= 0 && s.isNotEmpty && d >= 0.0 && list.length >= 0;
             },
             [
               Gen.interval(0, 10),

@@ -5,8 +5,6 @@ import 'package:dartproptest/src/generator/string.dart';
 import 'package:dartproptest/src/generator/boolean.dart';
 import 'package:dartproptest/src/generator/floating.dart';
 import 'package:dartproptest/src/generator/array.dart';
-import 'package:dartproptest/src/generator/tuple.dart';
-import 'package:dartproptest/src/combinator/just.dart';
 
 void main() {
   group('Property Simple Tests', () {
@@ -100,8 +98,8 @@ void main() {
     });
 
     test('property with seeded random', () {
-      final prop1 = Property((int a) => a >= 0).setSeed('42');
-      final prop2 = Property((int a) => a >= 0).setSeed('42');
+      // final prop1 = Property((int a) => a >= 0).setSeed('42');
+      // final prop2 = Property((int a) => a >= 0).setSeed('42');
 
       // Both should generate the same sequence
       final results1 = <int>[];

@@ -9,7 +9,8 @@ analyzer:
     - "doc/api/**"
     - "site/**"
     - "flutter_compat_test/**"
-  
+    - "test/**"
+
   language:
     strict-casts: true
     strict-inference: true

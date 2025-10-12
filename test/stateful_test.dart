@@ -154,7 +154,7 @@ void main() {
     });
 
     test('StatefulProperty can run basic test', () {
-      final rand = Random('42');
+      // final rand = Random('42');
 
       // Create a simple counter system
       final initialGen =
@@ -276,7 +276,7 @@ void main() {
         (obj, model) => popGen,
         weightedValue((obj, model) => clearGen, 0.1),
       ]);
-      final modelFactory = (obj) => {'count': obj.length};
+      final modelFactory = (List<int> obj) => {'count': obj.length};
       final prop = statefulProperty(
         arrayGen(interval(0, 10000), 0, 20),
         modelFactory,
@@ -345,7 +345,7 @@ void main() {
         (obj, model) => popGen,
         weightedValue((obj, model) => clearGen, 0.1),
       ]);
-      final modelFactory = (obj) => {'count': obj.length};
+      final modelFactory = (List<int> obj) => {'count': obj.length};
       final prop = statefulProperty(
         arrayGen(interval(0, 10000), 0, 20),
         modelFactory,
