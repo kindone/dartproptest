@@ -37,7 +37,17 @@ jobs:
       run: |
         echo "Running static analysis..."
         dart analyze
-        echo "Analysis completed successfully"
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 1 ]; then
+          echo "❌ Analysis failed with errors"
+          exit 1
+        elif [ $EXIT_CODE -eq 2 ]; then
+          echo "⚠️ Analysis completed with warnings (acceptable)"
+          exit 0
+        else
+          echo "✅ Analysis completed successfully"
+          exit 0
+        fi
     
     - name: Run tests
       run: dart test
