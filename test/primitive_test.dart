@@ -196,7 +196,7 @@ void main() {
     });
 
     test('generateInteger shrinking convergence', () {
-      final rand = Random('convergence-test');
+      final rand = Random();
       final shrinkable = generateInteger(rand, 0, 100);
 
       // Follow a shrinking path to see if it converges to 0
@@ -219,8 +219,10 @@ void main() {
         }
       }
 
-      // Should have made progress
-      expect(steps, greaterThan(0));
+      // Should have made progress (unless we started at 0, which has no shrinks)
+      if (shrinkable.value != 0) {
+        expect(steps, greaterThan(0));
+      }
     });
   });
 }
