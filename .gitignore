@@ -1,0 +1,54 @@
+# Dart/Flutter specific
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+flutter_compat_test/build/
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+lcov.info
+
+# Test outputs
+test/.test_coverage.dart
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Documentation build
+doc/api/
+site/
+
+# Analysis
+.analysis_options.bak

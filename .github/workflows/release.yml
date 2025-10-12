@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Dart SDK
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: stable
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Run tests
+      run: dart test
+    
+    - name: Verify pubspec
+      run: dart pub deps
+    
+    - name: Publish to pub.dev
+      run: dart pub publish
+      env:
+        PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false

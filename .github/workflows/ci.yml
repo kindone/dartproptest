@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        sdk: ['3.0.0', '3.1.0', '3.2.0', '3.3.0', '3.4.0']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Dart SDK
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: ${{ matrix.sdk }}
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Verify formatting
+      run: dart format --output=none --set-exit-if-changed .
+    
+    - name: Analyze project source
+      run: dart analyze --fatal-infos
+    
+    - name: Run tests
+      run: dart test
+    
+    - name: Run Flutter compatibility tests
+      run: |
+        cd flutter_compat_test
+        dart pub get
+        dart test
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Dart SDK
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: stable
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Run tests with coverage
+      run: dart test --coverage=coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    needs: [test, coverage]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Dart SDK
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: stable
+    
+    - name: Install dependencies
+      run: dart pub get
+    
+    - name: Verify pubspec
+      run: dart pub deps
+    
+    - name: Publish to pub.dev
+      run: dart pub publish --dry-run
+      env:
+        PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
