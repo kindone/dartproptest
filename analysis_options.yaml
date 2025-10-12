@@ -8,6 +8,7 @@ analyzer:
     - "build/**"
     - "doc/api/**"
     - "site/**"
+    - "flutter_compat_test/**"
   
   language:
     strict-casts: true
