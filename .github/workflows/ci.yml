@@ -27,10 +27,16 @@ jobs:
       run: dart pub get
     
     - name: Verify formatting
-      run: dart format --output=none --set-exit-if-changed .
+      run: |
+        echo "Checking code formatting..."
+        dart format --set-exit-if-changed .
+        echo "Formatting check completed successfully"
     
     - name: Analyze project source
-      run: dart analyze
+      run: |
+        echo "Running static analysis..."
+        dart analyze
+        echo "Analysis completed successfully"
     
     - name: Run tests
       run: dart test
