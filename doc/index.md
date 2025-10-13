@@ -1,6 +1,6 @@
 # dartproptest
 
-`dartproptest` is a property-based testing (PBT) framework for Dart, drawing inspiration from libraries such as Haskell's QuickCheck and Python's Hypothesis. This is a port of the TypeScript `jsproptest` library to Dart. Property-based testing shifts the focus from example-based verification to defining universal *properties* or *invariants* that must hold true for an input domain.
+`dartproptest` is a property-based testing (PBT) framework for Dart, drawing inspiration from libraries such as Haskell's QuickCheck and Python's Hypothesis. This is a port of the TypeScript [jsproptest](https://github.com/kindone/jsproptest) library to Dart. Property-based testing shifts the focus from example-based verification to defining universal *properties* or *invariants* that must hold true for an input domain.
 
 Instead of manually crafting test cases for specific inputs, PBT allows you to describe the *domain* of inputs your function expects and the *general characteristics* of the output (e.g., `add(a, b)` should always be greater than or equal to `a` and `b` if they are non-negative). PBT then generates hundreds or thousands of varied inputs, searching for edge cases or unexpected behaviors that violate your defined properties. This approach significantly increases test coverage and the likelihood of finding subtle bugs.
 
