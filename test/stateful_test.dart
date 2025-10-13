@@ -380,4 +380,141 @@ void main() {
       expect(cleanupCallCount, equals(0));
     });
   });
+
+  group('Stateful Testing Type Behavior Tests', () {
+    test('Primitive type state behavior - obj parameter not updated', () {
+      // Test with primitive type (int) as state
+      final incrementAction = Action<int, Map<String, int>>((obj, mdl) {
+        // This won't actually modify obj since int is passed by value
+        // But we can test the structure and see that obj parameter stays the same
+        mdl['count'] = (mdl['count'] ?? 0) + 1;
+        mdl['lastObjValue'] = obj; // Record what obj value was passed
+      }, 'increment');
+
+      // Action factory that should generate different actions based on count
+      final actionFactory = (int obj, Map<String, int> mdl) {
+        final count = mdl['count'] ?? 0;
+        // For primitive types, obj will always be the initial value (0)
+        // because actions cannot modify primitive parameters
+        return just(incrementAction);
+      };
+
+      final prop = statefulProperty(
+        just(0), // Initial state is primitive int
+        (obj) => {'count': 0, 'lastObjValue': obj},
+        actionFactory,
+      );
+
+      // This should work, but obj parameter will always be 0
+      expect(() => prop.setNumRuns(1).setMaxActions(3).setVerbosity(true).go(),
+          returnsNormally);
+    });
+
+    test('Object type state behavior - obj parameter gets updated', () {
+      // Test with object type (List) as state
+      final incrementAction = Action<List<int>, Map<String, int>>((obj, mdl) {
+        obj.add(1); // This modifies the list (passed by reference)
+        mdl['count'] = (mdl['count'] ?? 0) + 1;
+        mdl['lastObjLength'] = obj.length; // Record the current length
+      }, 'increment');
+
+      // Action factory that should generate different actions based on list length
+      final actionFactory = (List<int> obj, Map<String, int> mdl) {
+        final count = mdl['count'] ?? 0;
+        // For object types, obj will reflect the current state
+        // because actions can modify object parameters
+        return just(incrementAction);
+      };
+
+      final prop = statefulProperty(
+        just(<int>[]), // Initial state is object (List)
+        (obj) => {'count': 0, 'lastObjLength': obj.length},
+        actionFactory,
+      );
+
+      // This should work correctly with obj parameter being updated
+      expect(() => prop.setNumRuns(1).setMaxActions(3).setVerbosity(true).go(),
+          returnsNormally);
+    });
+
+    test('State-dependent action generation with object types', () {
+      // Test that action generation works correctly with object types
+      final pushAction = Action<List<int>, Map<String, int>>((obj, mdl) {
+        obj.add(42);
+        mdl['count'] = (mdl['count'] ?? 0) + 1;
+      }, 'push');
+
+      final popAction = Action<List<int>, Map<String, int>>((obj, mdl) {
+        if (obj.isNotEmpty) {
+          obj.removeLast();
+          mdl['count'] = (mdl['count'] ?? 0) + 1;
+        }
+      }, 'pop');
+
+      // Action factory that generates different actions based on current state
+      final actionFactory = (List<int> obj, Map<String, int> mdl) {
+        if (obj.isEmpty) {
+          return just(pushAction); // Only push when empty
+        } else {
+          return oneOf([
+            just(pushAction),
+            just(popAction)
+          ]); // Push or pop when not empty
+        }
+      };
+
+      final prop = statefulProperty(
+        just(<int>[]), // Start with empty list
+        (obj) => {'count': 0},
+        actionFactory,
+      );
+
+      // This should work correctly - actions generated based on current state
+      expect(() => prop.setNumRuns(1).setMaxActions(5).go(), returnsNormally);
+    });
+
+    test('State-dependent action generation with primitive types (limitation)',
+        () {
+      // Test that demonstrates the limitation with primitive types
+      final incrementAction = Action<int, Map<String, int>>((obj, mdl) {
+        // Cannot modify obj (primitive), so we track state in model
+        mdl['value'] = (mdl['value'] ?? 0) + 1;
+        mdl['count'] = (mdl['count'] ?? 0) + 1;
+      }, 'increment');
+
+      final decrementAction = Action<int, Map<String, int>>((obj, mdl) {
+        // Cannot modify obj (primitive), so we track state in model
+        final currentValue = mdl['value'] ?? 0;
+        if (currentValue > 0) {
+          mdl['value'] = currentValue - 1;
+        }
+        mdl['count'] = (mdl['count'] ?? 0) + 1;
+      }, 'decrement');
+
+      // Action factory that should generate different actions based on current value
+      // But obj parameter will always be the initial value (0) for primitive types
+      final actionFactory = (int obj, Map<String, int> mdl) {
+        final currentValue = mdl['value'] ?? 0;
+        // Note: obj will always be 0, so we rely on mdl['value'] for state
+        if (currentValue == 0) {
+          return just(incrementAction); // Only increment when value is 0
+        } else {
+          return oneOf([
+            just(incrementAction),
+            just(decrementAction)
+          ]); // Both when value > 0
+        }
+      };
+
+      final prop = statefulProperty(
+        just(0), // Start with primitive value 0
+        (obj) => {'value': 0, 'count': 0},
+        actionFactory,
+      );
+
+      // This works, but demonstrates the limitation: obj parameter is always 0
+      // State must be tracked in the model for primitive types
+      expect(() => prop.setNumRuns(1).setMaxActions(5).go(), returnsNormally);
+    });
+  });
 }

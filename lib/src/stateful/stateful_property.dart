@@ -111,24 +111,28 @@ class StatefulProperty<ObjectType, ModelType> {
         final initialObj = initialGen.generate(rand).value;
         final model = modelFactory(initialObj);
 
-        // Generate sequence of actions
+        // Generate and execute actions one by one
         final numActions = rand.interval(_minActions, _maxActions);
-        final actions = <Action<ObjectType, ModelType>>[];
+        var currentObj = initialObj;
+        var currentModel = model;
 
         for (int i = 0; i < numActions; i++) {
-          final actionGen = actionGenFactory(initialObj, model);
+          // Generate action based on current state
+          final actionGen = actionGenFactory(currentObj, currentModel);
           final action = actionGen.generate(rand).value;
-          actions.add(action);
-        }
 
-        // Execute actions
-        for (final action in actions) {
-          action.call(initialObj, model);
+          // Execute action on current state
+          action.call(currentObj, currentModel);
+
+          // For object types (List, Map, etc.), currentObj is automatically updated
+          // because they are passed by reference. For primitive types (int, String, etc.),
+          // the action cannot modify the primitive, so we rely on the model to track
+          // the actual state. This is a design limitation of the current API.
         }
 
         // Perform post-check if defined
         if (_postCheck != null) {
-          _postCheck!(initialObj, model);
+          _postCheck!(currentObj, currentModel);
         }
 
         // Call cleanup callback
@@ -137,7 +141,7 @@ class StatefulProperty<ObjectType, ModelType> {
         }
 
         if (_verbose) {
-          print('Run $run: ${actions.length} actions executed successfully');
+          print('Run $run: $numActions actions executed successfully');
         }
       } catch (e) {
         if (_verbose) {
