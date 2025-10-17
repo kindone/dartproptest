@@ -298,7 +298,7 @@ void main() {
 
       // This should fail: 1 push (count = 1) then multiple pops that decrement count
       // even when list is empty, making count negative
-      expect(() => prop.setNumRuns(1).setMaxActions(5).setSeed('test').go(),
+      expect(() => prop.setNumRuns(20).setMaxActions(5).setSeed('test').go(),
           throwsA(isA<TestFailure>()));
     });
   });

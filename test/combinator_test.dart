@@ -5,7 +5,7 @@ void main() {
   group('Combinator Tests', () {
     test('just produces constant values', () {
       final rand = Random('42');
-      final constGen = just(42);
+      final constGen = Gen.just(42);
 
       for (int i = 0; i < 5; i++) {
         final result = constGen.generate(rand);
@@ -16,7 +16,7 @@ void main() {
     test('lazy evaluates function on each generation', () {
       final rand = Random('42');
       int counter = 0;
-      final lazyGen = lazy(() => ++counter);
+      final lazyGen = Gen.lazy(() => ++counter);
 
       final result1 = lazyGen.generate(rand);
       final result2 = lazyGen.generate(rand);
@@ -27,7 +27,7 @@ void main() {
 
     test('elementOf selects from provided values', () {
       final rand = Random('42');
-      final elementGen = elementOf<int>([1, 2, 3, 4, 5]);
+      final elementGen = Gen.elementOf<int>([1, 2, 3, 4, 5]);
 
       final results = <int>[];
       for (int i = 0; i < 10; i++) {
@@ -43,9 +43,9 @@ void main() {
 
     test('elementOf with weighted values', () {
       final rand = Random('42');
-      final weightedGen = elementOf<int>([
-        weightedValue(1, 0.5), // 50% chance
-        weightedValue(2, 0.3), // 30% chance
+      final weightedGen = Gen.elementOf<int>([
+        Gen.weightedValue(1, 0.5), // 50% chance
+        Gen.weightedValue(2, 0.3), // 30% chance
         3, // 20% chance (remaining)
       ]);
 
@@ -65,7 +65,7 @@ void main() {
       final rand = Random('42');
       final gen1 = Arbitrary<int>((rand) => Shrinkable<int>(1));
       final gen2 = Arbitrary<int>((rand) => Shrinkable<int>(2));
-      final oneOfGen = oneOf([gen1, gen2]);
+      final oneOfGen = Gen.oneOf([gen1, gen2]);
 
       final results = <int>[];
       for (int i = 0; i < 10; i++) {
@@ -83,9 +83,9 @@ void main() {
       final rand = Random('42');
       final gen1 = Arbitrary<int>((rand) => Shrinkable<int>(1));
       final gen2 = Arbitrary<int>((rand) => Shrinkable<int>(2));
-      final weightedOneOfGen = oneOf([
-        weightedGen(gen1, 0.8), // 80% chance
-        gen2, // 20% chance (remaining)
+      final weightedOneOfGen = Gen.oneOf([
+        Gen.weightedGen(gen1, 0.8), // 80% chance
+        Gen.weightedGen(gen2, 0.2), // 20% chance (remaining)
       ]);
 
       final results = <int>[];
@@ -107,7 +107,7 @@ void main() {
           Arbitrary<int>((rand) => Shrinkable<int>(rand.interval(1, 10)));
       final stringGen = Arbitrary<String>((rand) => Shrinkable<String>('test'));
 
-      final constructGen = construct<Map<String, dynamic>>(
+      final constructGen = Gen.construct<Map<String, dynamic>>(
           (args) => {'value': args[0] as int, 'name': args[1] as String},
           [intGen, stringGen]);
 
@@ -155,10 +155,10 @@ void main() {
     // Verifies that values are correctly chosen from either range and maintains roughly equal distribution
     test('oneOf with range generators', () {
       // Create two generators: one for numbers 1-3 and another for numbers 6-8
-      final numGen1 = interval(1, 3);
-      final numGen2 = interval(6, 8);
+      final numGen1 = Gen.interval(1, 3);
+      final numGen2 = Gen.interval(6, 8);
       // Combine them into a single generator that randomly chooses between the two
-      final gen1 = oneOf([numGen1, numGen2]);
+      final gen1 = Gen.oneOf([numGen1, numGen2]);
       int countGen1 = 0;
       int countGen2 = 0;
 
@@ -191,10 +191,10 @@ void main() {
     // Verifies that the first generator is chosen more frequently (80% of the time) than the second
     test('oneOf weighted', () {
       // Create the same two generators as before
-      final numGen1 = interval(1, 3);
-      final numGen2 = interval(6, 8);
+      final numGen1 = Gen.interval(1, 3);
+      final numGen2 = Gen.interval(6, 8);
       // Create a weighted generator where numGen1 has 80% chance of being selected
-      final gen2 = oneOf([weightedGen(numGen1, 0.8), numGen2]);
+      final gen2 = Gen.oneOf([Gen.weightedGen(numGen1, 0.8), numGen2]);
       int countGen1 = 0;
       int countGen2 = 0;
 
@@ -227,7 +227,7 @@ void main() {
     // Verifies that all possible values are generated and distribution is roughly equal
     test('elementOf with specific values', () {
       // Create a generator that randomly selects from these four numbers
-      final gen1 = elementOf([2, 10, -1, 7]);
+      final gen1 = Gen.elementOf([2, 10, -1, 7]);
       int count2 = 0;
       int countAll = 0;
 
@@ -253,7 +253,7 @@ void main() {
     // Verifies that the first value (1) is chosen more frequently (80% of the time) than the second value (10)
     test('elementOf weighted', () {
       // Create a generator that selects between 1 and 10, with 1 having 80% probability
-      final gen2 = elementOf([weightedValue(1, 0.8), 10]);
+      final gen2 = Gen.elementOf([Gen.weightedValue(1, 0.8), 10]);
       int count1 = 0;
       int count10 = 0;
 
@@ -285,10 +285,10 @@ void main() {
       // Create a generator for Cat-like objects with:
       // - a: random number between 1 and 3
       // - b: randomly either 'Cat' or 'Kitten'
-      final catGen = construct<Map<String, dynamic>>(
+      final catGen = Gen.construct<Map<String, dynamic>>(
           (args) => {'a': args[0], 'b': args[1]}, [
-        interval(1, 3),
-        elementOf(['Cat', 'Kitten'])
+        Gen.interval(1, 3),
+        Gen.elementOf(['Cat', 'Kitten'])
       ]);
 
       // Test that all generated Cat objects have valid properties
@@ -306,15 +306,16 @@ void main() {
     // Verifies that each element in the tuple is properly constrained by the previous elements
     test('chainTuple with nested constraints', () {
       // Start with a generator for numbers 1-3
-      final numGen1 = interval(1, 3);
+      final numGen1 = Gen.interval(1, 3);
       // Create a pair where second number is between 0 and first number
-      final pairGen =
-          numGen1.flatMap((num) => tupleGen([just(num), interval(0, num)]));
+      final pairGen = numGen1
+          .flatMap((num) => tupleGen([Gen.just(num), Gen.interval(0, num)]));
       // Create a triple where third number is between 0 and second number
-      final tripleGen = chainTuple(pairGen, (pair) => interval(0, pair[1]));
+      final tripleGen =
+          Gen.chainTuple(pairGen, (pair) => Gen.interval(0, pair[1]));
       // Create a quadruple where fourth number is between 0 and third number
-      final quadGen =
-          chainTuple(tripleGen, (triple) => interval(0, triple[2] as int));
+      final quadGen = Gen.chainTuple(
+          tripleGen, (triple) => Gen.interval(0, triple[2] as int));
 
       // Test that all numbers in the tuple follow the decreasing constraint
       forAllLegacy((List<dynamic> args) {
@@ -338,20 +339,20 @@ void main() {
     // Verifies the same constraints as chainTuple but using a different method chaining approach
     test('chainAsTuple with method chaining', () {
       // Start with the same base generator
-      final numGen1 = interval(1, 3);
+      final numGen1 = Gen.interval(1, 3);
       // Create the same nested structure using method chaining
       final quadGen = numGen1
           // First chain: second number between 0 and first number
-          .flatMap((num) => tupleGen([just(num), interval(0, num)]))
+          .flatMap((num) => Gen.tuple([Gen.just(num), Gen.interval(0, num)]))
           // Second chain: third number between 0 and second number
-          .flatMap((pair) =>
-              tupleGen([just(pair[0]), just(pair[1]), interval(0, pair[1])]))
+          .flatMap((pair) => Gen.tuple(
+              [Gen.just(pair[0]), Gen.just(pair[1]), Gen.interval(0, pair[1])]))
           // Third chain: fourth number between 0 and third number
-          .flatMap((triple) => tupleGen([
-                just(triple[0]),
-                just(triple[1]),
-                just(triple[2]),
-                interval(0, triple[2])
+          .flatMap((triple) => Gen.tuple([
+                Gen.just(triple[0]),
+                Gen.just(triple[1]),
+                Gen.just(triple[2]),
+                Gen.interval(0, triple[2])
               ]));
 
       // Test the same constraints as in chainTuple

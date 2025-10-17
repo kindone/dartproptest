@@ -136,7 +136,7 @@ class Gen {
       oneof_gen.oneOf(generators);
 
   /// Randomly picks one value from the provided list
-  static Generator<T> elementOf<T>(List<T> values) =>
+  static Generator<T> elementOf<T>(List<dynamic> values) =>
       element_gen.elementOf(values);
 
   /// Wraps a generator with a weight for oneOf
