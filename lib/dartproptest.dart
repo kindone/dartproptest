@@ -31,6 +31,7 @@ export 'src/property.dart';
 export 'src/property_simple.dart';
 export 'src/property_typed.dart';
 export 'src/property_variadic.dart';
+export 'src/property_variadic_async.dart';
 export 'src/typed_function.dart';
 
 // Combinators
@@ -64,6 +65,7 @@ export 'src/shrinker/dictionary.dart';
 
 // Stateful Testing
 export 'src/stateful/stateful_base.dart';
+export 'src/stateful/stateful_base_async.dart';
 export 'src/stateful/action_factory.dart';
 export 'src/stateful/stateful_property.dart';
 
