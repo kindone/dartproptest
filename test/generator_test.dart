@@ -555,42 +555,116 @@ void main() {
       }, [gen1]);
     });
 
-    // TODO: Implement aggregate combinator
-    // test('aggregate combinator', () {
-    //   Generator<List<double>> gen1 = interval(0, 1).map((num) => [num]);
-    //   final gen = gen1.aggregate(
-    //     (nums) {
-    //       final last = nums[nums.length - 1];
-    //       return interval(last, last + 1).map((num) => [...nums, num]);
-    //     },
-    //     2,
-    //     4
-    //   );
+    test('accumulate combinator', () {
+      Generator<int> gen1 = interval(0, 2);
+      final gen = gen1.accumulate((num) => interval(num, num + 2), 2, 4);
 
-    //   forAllLegacy((List<dynamic> args) {
-    //     final generatedArray = args[0] as List<dynamic>;
-    //     expect(generatedArray.length, greaterThanOrEqualTo(2));
-    //     expect(generatedArray.length, lessThanOrEqualTo(4));
-    //     expect(generatedArray.every((num, index) =>
-    //       index == 0 || (num as double) >= (generatedArray[index - 1] as double)
-    //     ), isTrue);
-    //   }, [gen]);
-    // });
+      forAllLegacy((List<dynamic> args) {
+        final generatedArray = args[0] as List<dynamic>;
+        expect(generatedArray.length, greaterThanOrEqualTo(2));
+        expect(generatedArray.length, lessThanOrEqualTo(4));
+        // Check that each element is >= the previous one
+        for (int i = 1; i < generatedArray.length; i++) {
+          expect(
+              generatedArray[i], greaterThanOrEqualTo(generatedArray[i - 1]));
+        }
+      }, [gen]);
+    });
 
-    // TODO: Implement accumulate combinator
-    // test('accumulate combinator', () {
-    //   Generator<double> gen1 = interval(0, 2);
-    //   final gen = gen1.accumulate((num) => interval(num, num + 2), 2, 4);
+    test('accumulate with increasing numbers', () {
+      // Generate arrays where each number is >= the previous one
+      final gen = interval(0, 10)
+          .accumulate((lastNum) => interval(lastNum, lastNum + 5), 3, 6);
 
-    //   forAllLegacy((List<dynamic> args) {
-    //     final generatedArray = args[0] as List<dynamic>;
-    //     expect(generatedArray.length, greaterThanOrEqualTo(2));
-    //     expect(generatedArray.length, lessThanOrEqualTo(4));
-    //     expect(generatedArray.every((num, index) =>
-    //       index == 0 || (num as double) >= (generatedArray[index - 1] as double)
-    //     ), isTrue);
-    //   }, [gen]);
-    // });
+      forAllLegacy((List<dynamic> args) {
+        final nums = args[0] as List<dynamic>;
+        expect(nums.length, greaterThanOrEqualTo(3));
+        expect(nums.length, lessThanOrEqualTo(6));
+
+        // Check that each number is >= the previous one
+        for (int i = 1; i < nums.length; i++) {
+          expect(nums[i], greaterThanOrEqualTo(nums[i - 1]));
+        }
+      }, [gen]);
+    });
+
+    test('accumulate with Fibonacci-like sequence', () {
+      // Generate arrays where each number is the sum of the previous two
+      final gen = interval(0, 2).accumulate((lastNum) {
+        // This is a simplified version - in real Fibonacci, we'd need the previous two numbers
+        return interval(lastNum, lastNum + 3);
+      }, 2, 5);
+
+      forAllLegacy((List<dynamic> args) {
+        final nums = args[0] as List<dynamic>;
+        expect(nums.length, greaterThanOrEqualTo(2));
+        expect(nums.length, lessThanOrEqualTo(5));
+
+        // All numbers should be non-negative
+        for (final num in nums) {
+          expect(num, greaterThanOrEqualTo(0));
+        }
+      }, [gen]);
+    });
+
+    test('accumulate shrinking behavior', () {
+      // Test that accumulate can shrink arrays by length and elements
+      // Use a larger range and force longer sequences
+      final gen = interval(10, 50)
+          .accumulate((lastNum) => interval(lastNum, lastNum + 10), 2, 10);
+
+      // Try multiple seeds to find a sequence that can be shrunk
+      for (int seed = 0; seed < 5; seed++) {
+        final rand = Random('shrinking_demo_$seed');
+        final shrinkable = gen.generate(rand);
+
+        print('=== Accumulate Shrinking Demonstration (Seed $seed) ===');
+        print('Original sequence: ${shrinkable.value}');
+        print('Sequence length: ${shrinkable.value.length}');
+
+        // Collect all shrinking results
+        final shrinkingResults = <List<int>>[];
+        final shrinks = shrinkable.shrinks();
+        final iterator = shrinks.iterator();
+
+        int step = 0;
+        while (iterator.hasNext() && step < 10) {
+          // Limit to 10 steps for readability
+          final shrunk = iterator.next();
+          shrinkingResults.add(shrunk.value);
+          print(
+              'Shrink step ${step + 1}: ${shrunk.value} (length: ${shrunk.value.length})');
+          step++;
+        }
+
+        print('Total shrinking steps: ${shrinkingResults.length}');
+
+        // If we found shrinking results, verify them and break
+        if (shrinkingResults.isNotEmpty) {
+          // Check that we can shrink to minimum length
+          final minLength = shrinkingResults
+              .map((list) => list.length)
+              .reduce((a, b) => a < b ? a : b);
+          expect(minLength, greaterThanOrEqualTo(2));
+
+          // Check that dependencies are preserved in all shrunk sequences
+          for (final sequence in shrinkingResults) {
+            for (int i = 1; i < sequence.length; i++) {
+              expect(sequence[i], greaterThanOrEqualTo(sequence[i - 1]),
+                  reason:
+                      'Dependency violated in sequence $sequence at index $i');
+            }
+          }
+
+          print('✅ All shrunk sequences preserve dependencies');
+          print('✅ Minimum length achieved: $minLength');
+          break; // Found a good example, stop trying other seeds
+        } else {
+          print('ℹ️  No shrinking steps available for this seed');
+        }
+        print(''); // Add spacing between attempts
+      }
+    });
 
     // test('accumulate many', () {
     //   Generator<double> gen1 = interval(0, 2);

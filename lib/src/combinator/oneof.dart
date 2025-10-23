@@ -34,6 +34,18 @@ class Weighted<T> implements Generator<T> {
   Generator<T> filter(bool Function(T) filterer) {
     return gen.filter(filterer);
   }
+
+  @override
+  Generator<List<T>> accumulate(
+      Generator<T> Function(T) nextGen, int minLength, int maxLength) {
+    return gen.accumulate(nextGen, minLength, maxLength);
+  }
+
+  @override
+  Generator<List<T>> aggregate(Generator<List<T>> Function(List<T>) nextGen,
+      int minLength, int maxLength) {
+    return gen.aggregate(nextGen, minLength, maxLength);
+  }
 }
 
 /// Helper function to explicitly create a Weighted generator.

@@ -1,5 +1,7 @@
 import 'random.dart';
 import 'shrinkable.dart';
+import 'shrinker/array.dart';
+import 'stream.dart';
 
 /// Defines the core interface for generating random values along with their shrinkable counterparts.
 /// Shrinkable values are essential for property-based testing, allowing the system to find the smallest failing example.
@@ -40,6 +42,26 @@ abstract class Generator<T> {
   /// [filterer] A function that returns true if the value should be kept.
   /// Returns a new Generator producing only values that satisfy the predicate.
   Generator<T> filter(bool Function(T) filterer);
+
+  /// Builds an array incrementally using the last generated value.
+  /// Starts with a value from this generator, then uses nextGen to produce the next element.
+  ///
+  /// [nextGen] A function that takes the last generated value and returns a generator for the next element.
+  /// [minLength] Minimum length of the resulting array.
+  /// [maxLength] Maximum length of the resulting array.
+  /// Returns a new Generator producing arrays built incrementally.
+  Generator<List<T>> accumulate(
+      Generator<T> Function(T) nextGen, int minLength, int maxLength);
+
+  /// Builds an array using the entire current array state.
+  /// Similar to accumulate, but nextGen takes the entire array generated so far.
+  ///
+  /// [nextGen] A function that takes the current array and returns a generator for the next complete array state.
+  /// [minLength] Minimum length of the resulting array.
+  /// [maxLength] Maximum length of the resulting array.
+  /// Returns a new Generator producing arrays built with full state awareness.
+  Generator<List<T>> aggregate(Generator<List<T>> Function(List<T>) nextGen,
+      int minLength, int maxLength);
 }
 
 /// A concrete implementation of the Generator interface.
@@ -97,6 +119,54 @@ class Arbitrary<T> implements Generator<T> {
         final shr = generate(rand);
         if (filterer(shr.value)) return shr;
       }
+    });
+  }
+
+  @override
+  Generator<List<T>> accumulate(
+      Generator<T> Function(T) nextGen, int minLength, int maxLength) {
+    return Arbitrary<List<T>>((rand) {
+      // Generate the initial value
+      final initialShr = generate(rand);
+      final targetLength = rand.interval(minLength, maxLength);
+
+      // Generate the full sequence and store Shrinkable elements
+      final shrinkableElements = <Shrinkable<T>>[initialShr];
+      var currentValue = initialShr.value;
+
+      for (int i = 1; i < targetLength; i++) {
+        final nextGenerator = nextGen(currentValue);
+        final nextShr = nextGenerator.generate(rand);
+        shrinkableElements.add(nextShr);
+        currentValue = nextShr.value;
+      }
+
+      // Use standard array shrinking - this will shrink length (from end) and individual elements
+      return shrinkableArray(shrinkableElements, minLength);
+    });
+  }
+
+  @override
+  Generator<List<T>> aggregate(Generator<List<T>> Function(List<T>) nextGen,
+      int minLength, int maxLength) {
+    return Arbitrary<List<T>>((rand) {
+      // Generate the initial value
+      final initialShr = generate(rand);
+      var currentArray = <T>[initialShr.value];
+
+      // Generate additional array states based on the current array
+      final targetLength = rand.interval(minLength, maxLength);
+      while (currentArray.length < targetLength) {
+        final nextGenerator = nextGen(currentArray);
+        final nextShr = nextGenerator.generate(rand);
+        currentArray = nextShr.value;
+      }
+
+      // For aggregate, we can't easily shrink individual elements since they're generated
+      // as complete array states. We'll use basic array shrinking by length.
+      final shrinkableElements =
+          currentArray.map((elem) => Shrinkable<T>(elem)).toList();
+      return shrinkableArray(shrinkableElements, minLength);
     });
   }
 }
