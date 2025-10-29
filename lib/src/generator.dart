@@ -93,7 +93,31 @@ class Arbitrary<T> implements Generator<T> {
       // Generate the initial value and use it to create the next generator
       final initialShr = generate(rand);
       final nextGen = genFactory(initialShr.value);
-      return nextGen.generate(rand);
+      final nextShr = nextGen.generate(rand);
+
+      // Helper function to create shrinks with proper type preservation
+      LazyStream<Shrinkable<U>> createFlatMapShrinks() {
+        // First, shrink the original value and regenerate new value for each
+        final originalShrinks = initialShr
+            .shrinks()
+            .transform<Shrinkable<U>>((Shrinkable<T> origShr) {
+          final newNextGen = genFactory(origShr.value);
+          final newNextShr = newNextGen.generate(rand);
+          return newNextShr; // Return the new shrinkable directly
+        });
+
+        // Then, shrink the new value directly
+        final newValueShrinks = nextShr.shrinks() as LazyStream<Shrinkable<U>>;
+
+        // Combine both shrink streams
+        return originalShrinks.concat(newValueShrinks);
+      }
+
+      // Create shrinks that preserve the structure
+      // 1. Shrink the original value and regenerate the new value for each shrunk original
+      // 2. Shrink the new value directly
+      // Combine both shrink streams
+      return Shrinkable<U>(nextShr.value, createFlatMapShrinks);
     });
   }
 
@@ -105,8 +129,28 @@ class Arbitrary<T> implements Generator<T> {
       final nextGen = genFactory(initialShr.value);
       final nextShr = nextGen.generate(rand);
 
-      // Return a shrinkable tuple
-      return Shrinkable<(T, U)>((initialShr.value, nextShr.value));
+      // Create shrinks that preserve the structure
+      // 1. Shrink the first value, regenerating the second for each shrunk first value
+      //    (and preserving the second value's shrinking structure)
+      // 2. Shrink the second value while keeping the first value fixed
+      return Shrinkable<(T, U)>((initialShr.value, nextShr.value))
+          .withShrinks(() {
+        // First, shrink the first value and regenerate second for each
+        final firstShrinks = initialShr.shrinks().transform((firstShr) {
+          final newNextGen = genFactory(firstShr.value);
+          final newNextShr = newNextGen.generate(rand);
+          // Preserve the shrinking structure of the new second value
+          return newNextShr.map((secondVal) => (firstShr.value, secondVal));
+        });
+
+        // Then, shrink the second value while keeping first fixed
+        final secondShrinks = nextShr.shrinks().transform((secondShr) {
+          return Shrinkable<(T, U)>((initialShr.value, secondShr.value));
+        });
+
+        // Combine both shrink streams
+        return firstShrinks.concat(secondShrinks);
+      });
     });
   }
 
@@ -117,7 +161,10 @@ class Arbitrary<T> implements Generator<T> {
       // Note: This can potentially loop infinitely if the filter is too restrictive.
       while (true) {
         final shr = generate(rand);
-        if (filterer(shr.value)) return shr;
+        if (filterer(shr.value)) {
+          // Apply the filter to the shrinks to ensure constraint preservation
+          return shr.filter(filterer);
+        }
       }
     });
   }
@@ -141,8 +188,56 @@ class Arbitrary<T> implements Generator<T> {
         currentValue = nextShr.value;
       }
 
-      // Use standard array shrinking - this will shrink length (from end) and individual elements
-      return shrinkableArray(shrinkableElements, minLength);
+      // Use a custom shrinking strategy that preserves constraints
+      // First, create a shrinkable that can shrink by length
+      final lengthShrinkable = shrinkArrayLength(shrinkableElements, minLength);
+
+      // Helper function to apply element shrinking to a list of given length
+      LazyStream<Shrinkable<List<T>>> applyElementShrinking(int length) {
+        final shrunkElements = <Shrinkable<T>>[];
+        bool hasShrinks = false;
+
+        for (int i = 0; i < length; i++) {
+          final elementShrinks = shrinkableElements[i].shrinks();
+          if (!elementShrinks.isEmpty()) {
+            final iterator = elementShrinks.iterator();
+            if (iterator.hasNext()) {
+              shrunkElements.add(iterator.next());
+              hasShrinks = true;
+            } else {
+              shrunkElements.add(shrinkableElements[i]);
+            }
+          } else {
+            shrunkElements.add(shrinkableElements[i]);
+          }
+        }
+
+        if (hasShrinks) {
+          return LazyStream<Shrinkable<List<T>>>(Shrinkable<List<T>>(
+              shrunkElements.map((shr) => shr.value).toList()));
+        } else {
+          return LazyStream<Shrinkable<List<T>>>(null);
+        }
+      }
+
+      // Create final shrinkable that combines:
+      // 1. Length shrinking (with element shrinking applied to each length-shrunk version) - prioritized for efficiency
+      // 2. Element shrinking for the root value
+      return Shrinkable<List<T>>(lengthShrinkable.value).withShrinks(() {
+        // Get length-based shrinks with element shrinking applied
+        final lengthShrinks = lengthShrinkable.shrinks().transform((lengthShr) {
+          return Shrinkable<List<T>>(lengthShr.value).withShrinks(() {
+            return applyElementShrinking(lengthShr.value.length);
+          });
+        });
+
+        // Get element-based shrinks for the root value
+        final rootElementShrinks =
+            applyElementShrinking(lengthShrinkable.value.length);
+
+        // Combine both: length shrinks first (logarithmic), then element shrinks
+        return lengthShrinks.concat(rootElementShrinks);
+      });
     });
   }
 
@@ -154,19 +249,88 @@ class Arbitrary<T> implements Generator<T> {
       final initialShr = generate(rand);
       var currentArray = <T>[initialShr.value];
 
-      // Generate additional array states based on the current array
+      // Store shrinkables for each array state (for potential state shrinking)
+      final arrayStateShrinkables = <Shrinkable<List<T>>>[];
       final targetLength = rand.interval(minLength, maxLength);
+
       while (currentArray.length < targetLength) {
         final nextGenerator = nextGen(currentArray);
         final nextShr = nextGenerator.generate(rand);
+        arrayStateShrinkables.add(nextShr);
         currentArray = nextShr.value;
       }
 
-      // For aggregate, we can't easily shrink individual elements since they're generated
-      // as complete array states. We'll use basic array shrinking by length.
-      final shrinkableElements =
-          currentArray.map((elem) => Shrinkable<T>(elem)).toList();
-      return shrinkableArray(shrinkableElements, minLength);
+      // For aggregate, array states are generated as complete states that depend on previous states.
+      // We can shrink:
+      // 1. By length (remove trailing elements from final array) - logarithmic
+      // 2. The initial element (if it has shrinks)
+      // 3. Each array state (if the generator provides shrinks)
+
+      // Create shrinkables for the final array elements
+      // For aggregate, we can shrink:
+      // 1. The initial element (if it has shrinks)
+      // 2. Array states (if generators provide shrinks) - but this is complex due to dependencies
+      // For simplicity, we'll allow shrinking the initial element and use simple shrinkables for others
+      final shrinkableElements = <Shrinkable<T>>[];
+
+      // First element comes from initialShr (can be shrunk)
+      shrinkableElements.add(initialShr);
+
+      // For remaining elements, create simple shrinkables without shrinking
+      // (since they depend on previous states, shrinking them independently is complex)
+      for (int i = 1; i < currentArray.length; i++) {
+        shrinkableElements.add(Shrinkable<T>(currentArray[i]));
+      }
+
+      // Use length-based shrinking first (logarithmic)
+      final lengthShrinkable = shrinkArrayLength(shrinkableElements, minLength);
+
+      // Helper function to apply element/state shrinking to a list of given length
+      LazyStream<Shrinkable<List<T>>> applyElementShrinking(int length) {
+        final shrunkElements = <Shrinkable<T>>[];
+        bool hasShrinks = false;
+
+        for (int i = 0; i < length; i++) {
+          final elementShrinks = shrinkableElements[i].shrinks();
+          if (!elementShrinks.isEmpty()) {
+            final iterator = elementShrinks.iterator();
+            if (iterator.hasNext()) {
+              shrunkElements.add(iterator.next());
+              hasShrinks = true;
+            } else {
+              shrunkElements.add(shrinkableElements[i]);
+            }
+          } else {
+            shrunkElements.add(shrinkableElements[i]);
+          }
+        }
+
+        if (hasShrinks) {
+          return LazyStream<Shrinkable<List<T>>>(Shrinkable<List<T>>(
+              shrunkElements.map((shr) => shr.value).toList()));
+        } else {
+          return LazyStream<Shrinkable<List<T>>>(null);
+        }
+      }
+
+      // Create final shrinkable that combines:
+      // 1. Length shrinking (with element shrinking applied) - prioritized for efficiency
+      // 2. Element shrinking for the root value
+      return Shrinkable<List<T>>(lengthShrinkable.value).withShrinks(() {
+        // Get length-based shrinks with element shrinking applied
+        final lengthShrinks = lengthShrinkable.shrinks().transform((lengthShr) {
+          return Shrinkable<List<T>>(lengthShr.value).withShrinks(() {
+            return applyElementShrinking(lengthShr.value.length);
+          });
+        });
+
+        // Get element-based shrinks for the root value
+        final rootElementShrinks =
+            applyElementShrinking(lengthShrinkable.value.length);
+
+        // Combine both: length shrinks first (logarithmic), then element shrinks
+        return lengthShrinks.concat(rootElementShrinks);
+      });
     });
   }
 }
