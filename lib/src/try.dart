@@ -50,9 +50,17 @@ class Try<T> {
   T getOrThrow([Object Function(Object)? errorTransformer]) {
     if (_isSuccess) return _value!;
     if (errorTransformer != null) {
-      throw errorTransformer(_error!);
+      final transformed = errorTransformer(_error!);
+      if (transformed is Exception) {
+        throw transformed;
+      }
+      throw Exception(transformed.toString());
     }
-    throw _error!;
+    final err = _error!;
+    if (err is Exception) {
+      throw err;
+    }
+    throw Exception(err.toString());
   }
 
   /// Transforms the value if this is a success, otherwise returns this failure.

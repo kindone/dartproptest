@@ -65,6 +65,7 @@ class StatefulProperty<ObjectType, ModelType> {
   }
 
   /// Enables or disables verbose logging.
+  // ignore: avoid_positional_boolean_parameters
   StatefulProperty<ObjectType, ModelType> setVerbosity(bool verbose) {
     _verbose = verbose;
     return this;
@@ -188,7 +189,7 @@ StatefulProperty<ObjectType, void> simpleStatefulProperty<ObjectType>(
 ) {
   return StatefulProperty<ObjectType, void>(
     initialGen,
-    (_) => null, // Empty model
+    (_) {}, // Empty model
     (obj, _) => simpleActionGenFactory(obj).map((simpleAction) =>
         Action<ObjectType, void>(
             (o, __) => simpleAction.call(o), simpleAction.name)),

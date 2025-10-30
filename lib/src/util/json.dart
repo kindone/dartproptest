@@ -1,4 +1,5 @@
 /// Utility functions for JSON serialization
+// ignore_for_file: avoid_classes_with_only_static_members
 class JSONStringify {
   /// Converts a value to its JSON string representation.
   ///

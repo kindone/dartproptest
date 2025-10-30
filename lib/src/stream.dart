@@ -2,11 +2,11 @@ import 'util/json.dart';
 
 /// An iterator for consuming a LazyStream. It keeps track of the remaining stream state.
 /// Note: This iterator modifies the stream it references as it progresses.
-class _Iterator<T> {
+class LazyStreamIterator<T> {
   /// The LazyStream to iterate over.
   LazyStream<T> stream;
 
-  _Iterator(this.stream);
+  LazyStreamIterator(this.stream);
 
   bool hasNext() {
     return !stream.isEmpty();
@@ -59,8 +59,9 @@ class LazyStream<T> {
   }
 
   /// Returns an Iterator to consume the stream.
-  _Iterator<T> iterator() {
-    return _Iterator<T>(this);
+  // ignore: use_to_and_as_if_applicable
+  LazyStreamIterator<T> iterator() {
+    return LazyStreamIterator<T>(this);
   }
 
   /// Lazily transforms each element of the stream using the provided function.
@@ -139,6 +140,7 @@ class LazyStream<T> {
       str += ', ${JSONStringify.call(value)}';
     }
     str += ')';
+    // ignore: join_return_with_assignment
     return str;
   }
 

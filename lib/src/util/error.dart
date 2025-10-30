@@ -1,4 +1,5 @@
 /// Custom exception types for the property-based testing framework
+library dartproptest.util.error;
 
 /// Exception thrown when a precondition fails during property testing.
 /// This allows the test to skip the current input and try another one.

@@ -27,11 +27,11 @@ LazyStream<Shrinkable<double>> _shrinkableFloatStream(double value) {
     int exponent = 0;
 
     if (value == double.infinity) {
-      final max = double.maxFinite;
+      const max = double.maxFinite;
       exponent = _getExponent(max);
       fraction = _getMantissa(max);
     } else if (value == double.negativeInfinity) {
-      final min = -double.maxFinite;
+      const min = -double.maxFinite;
       exponent = _getExponent(min);
       fraction = _getMantissa(min);
     } else {

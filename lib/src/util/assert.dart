@@ -12,6 +12,7 @@ import 'error.dart';
 ///   return x * x >= 0;
 /// }, Gen.integers());
 /// ```
+// ignore: avoid_positional_boolean_parameters
 void precond(bool condition, [String? message]) {
   if (!condition) {
     throw PreconditionError(message ?? 'Precondition failed');

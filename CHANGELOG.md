@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0-rc.1] - 2025-10-30
+
+### Changed
+- Overhauled shrinking behavior for `accumulate` to prioritize logarithmic length shrinks first, followed by element shrinks; preserves constraints and avoids exponential blow-ups.
+- Updated `aggregate` to mirror `accumulate` strategy: length-first shrinking and safe element shrinking (initial element only) to respect state dependencies.
+- Reworked `chain` and `flatMap` to preserve shrinking from both the original and derived generators; fixed type inference in `flatMap` for robust generic handling.
+- Replaced integer shrinker with a binary-search-based strategy to remove duplicates and ensure complete shrink trees.
+
+### Added
+- Deterministic tree structure tests using serialization for `map`, `filter`, `chain`, `flatMap`, `oneOf`, `accumulate`, and `aggregate` (including larger known shrink-trees such as 40213/7531246/964285173).
+- Constraint-preservation tests across combinators to ensure shrinks respect generation constraints.
+
+### Fixed
+- Resolved constraint violation and performance issues in `accumulate` (removed recursive `elementWise` explosion).
+- Ensured `oneOf` preserves the selected generator's tree using non-overlapping domains and deterministic seeds.
+- Addressed occasional flakiness in tests by seeding `Random` and tightening assertions.
+
 ### Added
 - Initial release of dartproptest
 - Property-based testing framework inspired by QuickCheck and Hypothesis

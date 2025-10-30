@@ -107,7 +107,7 @@ class Arbitrary<T> implements Generator<T> {
         });
 
         // Then, shrink the new value directly
-        final newValueShrinks = nextShr.shrinks() as LazyStream<Shrinkable<U>>;
+        final newValueShrinks = nextShr.shrinks();
 
         // Combine both shrink streams
         return originalShrinks.concat(newValueShrinks);
