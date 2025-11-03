@@ -34,7 +34,11 @@ void main() {
       final iterator = shrinks.iterator();
       expect(iterator.hasNext(), equals(true));
       final firstShrink = iterator.next();
-      expect(firstShrink.value, equals(4)); // 8 / 2
+      expect(firstShrink.value, equals(0)); // Prepend 0 first, then binary search
+      
+      expect(iterator.hasNext(), equals(true));
+      final secondShrink = iterator.next();
+      expect(secondShrink.value, equals(4)); // 8 / 2
     });
 
     test('shrinkArrayLength shrinks array lengths', () {
@@ -55,7 +59,8 @@ void main() {
       final iterator = shrinks.iterator();
       expect(iterator.hasNext(), equals(true));
       final firstShrink = iterator.next();
-      expect(firstShrink.value, hasLength(3)); // 5 - 2 = 3, then 3/2 + 2 = 3
+      // range = 5 - 2 = 3, binarySearchShrinkable(3) first gives 0, so size = 0 + 2 = 2
+      expect(firstShrink.value, hasLength(2));
     });
 
     test('shrinkableArray creates shrinkable arrays', () {
@@ -128,6 +133,66 @@ void main() {
 
       final zeroShrinks = zeroShrinkable.shrinks();
       expect(zeroShrinks.isEmpty(), equals(true));
+    });
+
+    test('shrinkableFloat shrinks large values correctly', () {
+      final shrinkable = shrinkableFloat(100.0);
+      final shrinks = shrinkable.shrinks();
+
+      expect(shrinks.isEmpty(), isFalse);
+      final iterator = shrinks.iterator();
+      expect(iterator.next().value, equals(0.0)); // Prepended zero
+
+      // Should shrink to a smaller value (exponent-based shrinking)
+      expect(iterator.hasNext(), isTrue);
+      final secondShrink = iterator.next();
+      expect(secondShrink.value, lessThan(100.0));
+      expect(secondShrink.value, greaterThan(0.0));
+    });
+
+    test('shrinkableFloat shrinks values with exponent 0 correctly', () {
+      final testCases = [8.0, 3.14, 0.5];
+
+      for (final value in testCases) {
+        final shrinkable = shrinkableFloat(value);
+        final shrinks = shrinkable.shrinks();
+
+        expect(shrinks.isEmpty(), isFalse, reason: '$value should have shrinks');
+        final iterator = shrinks.iterator();
+        expect(iterator.next().value, equals(0.0)); // Prepended zero
+
+        // Should shrink to smaller values, not 0.0
+        if (iterator.hasNext()) {
+          final secondShrink = iterator.next();
+          expect(secondShrink.value, lessThan(value),
+              reason: '$value should shrink to a smaller value');
+          expect(secondShrink.value, greaterThanOrEqualTo(0.0));
+        }
+      }
+    });
+
+    test('shrinkableFloat tree terminates without infinite recursion', () {
+      // Verify that shrinking doesn't create infinite loops
+      final shrinkable = shrinkableFloat(100.0);
+      final shrinks = shrinkable.shrinks();
+      final iterator = shrinks.iterator();
+
+      iterator.next(); // Skip prepended 0.0
+      final secondShrink = iterator.next(); // Get first non-zero shrink
+
+      // The shrink should itself have shrinks, but they should be different values
+      final secondShrinks = secondShrink.shrinks();
+      if (!secondShrinks.isEmpty()) {
+        final secondIterator = secondShrinks.iterator();
+        secondIterator.next(); // Skip prepended 0.0
+
+        if (secondIterator.hasNext()) {
+          final thirdShrink = secondIterator.next();
+          // Should be different from the parent (no self-reference)
+          expect(thirdShrink.value, isNot(equals(secondShrink.value)),
+              reason: 'Shrink should not reference itself');
+        }
+      }
     });
 
     test('shrinkableTuple creates shrinkable tuples', () {

@@ -104,6 +104,7 @@ LazyStream<Shrinkable<int>> _genNeg(int min, int max) {
 
 /// Creates a shrinkable that uses binary search to shrink a range.
 /// This is useful for shrinking array lengths and other range-based values.
+/// Matches jsproptest behavior: shrinks towards 0 using genpos for all intermediate values.
 ///
 /// [range] The range to shrink (e.g., array length - minSize).
 /// Returns a Shrinkable that shrinks the range using binary search.
@@ -112,20 +113,18 @@ Shrinkable<int> binarySearchShrinkable(int range) {
     return Shrinkable<int>(0);
   }
 
-  return Shrinkable<int>(range, () => _binarySearchShrinks(range));
-}
-
-/// Generates binary search shrinks for a range.
-LazyStream<Shrinkable<int>> _binarySearchShrinks(int range) {
-  if (range <= 0) {
-    return LazyStream<Shrinkable<int>>(null);
-  }
-
-  final half = range ~/ 2;
-  if (half == 0) {
-    return LazyStream<Shrinkable<int>>(null);
-  }
-
-  return LazyStream<Shrinkable<int>>(
-      Shrinkable<int>(half, () => _binarySearchShrinks(half)));
+  return Shrinkable<int>(range, () {
+    if (range == 0) {
+      return LazyStream<Shrinkable<int>>(null);
+    }
+    // For positive numbers, shrink towards 0: prioritize 0, then use genpos for the range (0, value)
+    if (range > 0) {
+      return LazyStream<Shrinkable<int>>(Shrinkable<int>(0))
+          .concat(_genPos(0, range));
+    } else {
+      // For negative numbers, shrink towards 0: prioritize 0, then use genneg for the range (value, 0)
+      return LazyStream<Shrinkable<int>>(Shrinkable<int>(0))
+          .concat(_genNeg(range, 0));
+    }
+  });
 }
