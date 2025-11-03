@@ -571,6 +571,51 @@ void main() {
       }, [gen]);
     });
 
+    test('permutation generator: produces valid permutations for fixed items', () {
+      final gen = Gen.permutation([0, 1, 2, 3]);
+      forAllLegacy((List<dynamic> args) {
+        final perm = args[0] as List<int>;
+        expect(perm.length, equals(4));
+        // Elements should be 0..len-1 and unique
+        final set = perm.toSet();
+        expect(set.length, equals(perm.length));
+        for (int i = 0; i < perm.length; i++) {
+          expect(perm[i], inInclusiveRange(0, perm.length - 1));
+        }
+      }, [gen]);
+    });
+
+    int _inversions(List<int> a) {
+      int inv = 0;
+      for (int i = 0; i < a.length; i++) {
+        for (int j = i + 1; j < a.length; j++) {
+          if (a[i] > a[j]) inv++;
+        }
+      }
+      return inv;
+    }
+
+    test('permutation generator: shrinks towards identity', () {
+      // Fix seed to get a deterministic non-identity permutation of length 5
+      final rand = Random('perm_seed');
+      final gen = Gen.permutation([0, 1, 2, 3, 4]);
+      final shr = gen.generate(rand);
+
+      // Collect a shallow portion of the shrink tree
+      final it = shr.shrinks().iterator();
+      // First branch should be an order shrink; ensure it leads closer to identity
+      if (it.hasNext()) {
+        final first = it.next();
+        // More sorted than root
+        final rootInv = _inversions(shr.value);
+        final firstInv = _inversions(first.value);
+        expect(first.value.length, equals(shr.value.length));
+        expect(firstInv <= rootInv, isTrue);
+      }
+    });
+
+    
+
     test('accumulate with increasing numbers', () {
       // Generate arrays where each number is >= the previous one
       final gen = interval(0, 10)

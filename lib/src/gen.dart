@@ -6,6 +6,7 @@ import 'generator/floating.dart' as float_gen;
 import 'generator/array.dart' as array_gen;
 import 'generator/set.dart' as set_gen;
 import 'generator/tuple.dart' as tuple_gen;
+import 'generator/permutation.dart' as perm_gen;
 import 'generator/dictionary.dart' as dict_gen;
 import 'combinator/just.dart' as just_gen;
 import 'combinator/lazy.dart' as lazy_gen;
@@ -107,6 +108,10 @@ class Gen {
   /// Generates fixed-size arrays (tuples) from the provided generators
   static Generator<List<dynamic>> tuple(List<Generator<dynamic>> elementGens) =>
       tuple_gen.tupleGen(elementGens);
+
+  /// Generates permutations of the provided items (full permutation, no omission)
+  static Generator<List<T>> permutation<T>(List<T> items) =>
+      perm_gen.permutationOf(items);
 
   /// Generates Map objects with keys and values from the provided generators
   static Generator<Map<String, V>> dictionary<K, V>(
