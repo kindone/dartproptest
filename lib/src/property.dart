@@ -197,9 +197,8 @@ class Property {
 
       // Handle failures (throw)
       if ((result is Exception) || result == false) {
-        final errorMsg = result is Exception
-            ? result.toString()
-            : 'property returned false';
+        final errorMsg =
+            result is Exception ? result.toString() : 'property returned false';
         throw Exception(
             'Property failed in matrix test with combination: ${JSONStringify.call(combination)}\n  $errorMsg');
       }

@@ -204,7 +204,12 @@ void main() {
       });
 
       // Tests all combinations: (1,2), (1,3), (2,2), (2,3), (3,2), (3,3)
-      expect(() => prop.matrix([[1, 2, 3], [2, 3]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                [1, 2, 3],
+                [2, 3]
+              ]),
+          returnsNormally);
     });
 
     test('matrix: 3-argument test', () {
@@ -216,7 +221,13 @@ void main() {
       });
 
       // Tests all 2*2*2 = 8 combinations
-      expect(() => prop.matrix([[1, 2], [3, 4], [5, 6]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                [1, 2],
+                [3, 4],
+                [5, 6]
+              ]),
+          returnsNormally);
     });
 
     test('matrix: single argument test', () {
@@ -226,7 +237,11 @@ void main() {
       });
 
       // Tests all values in the list
-      expect(() => prop.matrix([[0, 1, 2, 3]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                [0, 1, 2, 3]
+              ]),
+          returnsNormally);
     });
 
     test('matrix: failure case - throws with combination details', () {
@@ -237,7 +252,10 @@ void main() {
       });
 
       expect(
-          () => prop.matrix([[1, 2, 3], [2, 3]]),
+          () => prop.matrix([
+                [1, 2, 3],
+                [2, 3]
+              ]),
           throwsA(predicate((e) =>
               e is Exception &&
               e.toString().contains('Property failed in matrix test'))));
@@ -254,7 +272,10 @@ void main() {
       });
 
       expect(
-          () => prop.matrix([[1, 2, 3], [2, 3]]),
+          () => prop.matrix([
+                [1, 2, 3],
+                [2, 3]
+              ]),
           throwsA(predicate((e) =>
               e is Exception &&
               e.toString().contains('Property failed in matrix test'))));
@@ -271,7 +292,12 @@ void main() {
       });
 
       // Should pass - preconditions are skipped
-      expect(() => prop.matrix([[0, 1, 2], [1, 2, 3]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                [0, 1, 2],
+                [1, 2, 3]
+              ]),
+          returnsNormally);
     });
 
     test('matrix: all preconditions fail', () {
@@ -286,10 +312,14 @@ void main() {
 
       // All combinations trigger preconditions
       expect(
-          () => prop.matrix([[0], [0]]),
+          () => prop.matrix([
+                [0],
+                [0]
+              ]),
           throwsA(predicate((e) =>
               e is Exception &&
-              e.toString().contains('All combinations in matrix test triggered preconditions'))));
+              e.toString().contains(
+                  'All combinations in matrix test triggered preconditions'))));
     });
 
     test('matrix: empty input lists throws', () {
@@ -299,7 +329,9 @@ void main() {
           () => prop.matrix([]),
           throwsA(predicate((e) =>
               e is ArgumentError &&
-              e.toString().contains('matrix() requires at least one input list'))));
+              e
+                  .toString()
+                  .contains('matrix() requires at least one input list'))));
     });
 
     test('matrix: with setup and teardown hooks', () {
@@ -308,12 +340,13 @@ void main() {
 
       final prop = Property((List<dynamic> args) {
         return true;
-      })
-          .setOnStartup(() => setupCount++)
-          .setOnCleanup(() => teardownCount++);
+      }).setOnStartup(() => setupCount++).setOnCleanup(() => teardownCount++);
 
       // 2*2 = 4 combinations
-      prop.matrix([[1, 2], [3, 4]]);
+      prop.matrix([
+        [1, 2],
+        [3, 4]
+      ]);
 
       // Setup should be called for each combination
       expect(setupCount, equals(4));
@@ -328,7 +361,12 @@ void main() {
         expect(a + b, greaterThanOrEqualTo(0));
       });
 
-      expect(() => prop.matrix([[1, 2], [3, 4]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                [1, 2],
+                [3, 4]
+              ]),
+          returnsNormally);
     });
 
     test('matrix: mixed types', () {
@@ -338,7 +376,12 @@ void main() {
         return s.length >= 0 && n >= 0;
       });
 
-      expect(() => prop.matrix([['a', 'ab'], [1, 2]]), returnsNormally);
+      expect(
+          () => prop.matrix([
+                ['a', 'ab'],
+                [1, 2]
+              ]),
+          returnsNormally);
     });
   });
 }
