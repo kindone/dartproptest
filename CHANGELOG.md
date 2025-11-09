@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-09
+
+### Added
+- **Matrix testing**: Added `Property.matrix()` method for exhaustive testing via Cartesian product of input lists. Useful for testing all combinations of small input domains (e.g., enum values, edge cases). Similar to cppproptest2's matrix functionality.
+- **Permutation generator**: Added `Gen.permutation(List<T>)` generator that creates permutations of the provided list. Shrinks towards the identity permutation (original order) by placing out-of-place elements into their correct positions recursively.
+
 ## [0.2.0-rc.1] - 2025-10-30
 
 ### Changed
