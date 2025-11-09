@@ -161,6 +161,59 @@ class Property {
     }
   }
 
+  /// Runs the property function with all combinations of input values (Cartesian product).
+  /// Tests every combination of values from the provided lists.
+  ///
+  /// [inputLists] List of lists, where each inner list contains possible values for one argument.
+  ///              The number of lists must match the number of arguments expected by the property function.
+  /// Returns `true` if all combinations pass.
+  /// Throws an Exception if any combination fails, including the failing combination in the error message.
+  ///
+  /// Example:
+  /// ```dart
+  /// final prop = Property((int a, int b) => a + b >= 0);
+  /// prop.matrix([[1, 2, 3], [2, 3]]); // Tests: (1,2), (1,3), (2,2), (2,3), (3,2), (3,3)
+  /// ```
+  bool matrix(List<List<dynamic>> inputLists) {
+    // Validate input
+    if (inputLists.isEmpty) {
+      throw ArgumentError('matrix() requires at least one input list');
+    }
+
+    // Compute Cartesian product
+    final combinations = _cartesianProduct(inputLists);
+
+    int numPrecondFailures = 0;
+
+    // Test each combination
+    for (final combination in combinations) {
+      final result = _test(combination);
+
+      // Handle preconditions (skip)
+      if (result is PreconditionError) {
+        numPrecondFailures++;
+        continue;
+      }
+
+      // Handle failures (throw)
+      if ((result is Exception) || result == false) {
+        final errorMsg = result is Exception
+            ? result.toString()
+            : 'property returned false';
+        throw Exception(
+            'Property failed in matrix test with combination: ${JSONStringify.call(combination)}\n  $errorMsg');
+      }
+    }
+
+    // Warn if too many preconditions failed
+    if (numPrecondFailures > 0 && numPrecondFailures == combinations.length) {
+      throw Exception(
+          'Property failed: All combinations in matrix test triggered preconditions ($numPrecondFailures combinations)');
+    }
+
+    return true;
+  }
+
   /// Sets the seed for the random number generator for reproducible runs.
   Property setSeed(String seed) {
     this.seed = seed;
@@ -307,6 +360,41 @@ class Property {
       // Note: Cleanup does NOT run in case of an exception.
       return e;
     }
+  }
+
+  /// Computes the Cartesian product of multiple lists.
+  /// Returns all possible combinations where one element is taken from each list.
+  ///
+  /// Example: `_cartesianProduct([[1, 2], [3, 4]])` returns `[[1, 3], [1, 4], [2, 3], [2, 4]]`
+  List<List<dynamic>> _cartesianProduct(List<List<dynamic>> lists) {
+    if (lists.isEmpty) {
+      return [];
+    }
+
+    // Handle single list case
+    if (lists.length == 1) {
+      return lists[0].map((item) => [item]).toList();
+    }
+
+    // Recursive approach: compute product of first list with product of rest
+    final firstList = lists[0];
+    final restLists = lists.sublist(1);
+    final restProduct = _cartesianProduct(restLists);
+
+    // If rest product is empty (one of the lists was empty), return empty
+    if (restProduct.isEmpty) {
+      return [];
+    }
+
+    // Combine each element of first list with each combination from rest
+    final result = <List<dynamic>>[];
+    for (final item in firstList) {
+      for (final restCombination in restProduct) {
+        result.add([item, ...restCombination]);
+      }
+    }
+
+    return result;
   }
 
   /// Constructs the final Error object to be thrown when a property fails.

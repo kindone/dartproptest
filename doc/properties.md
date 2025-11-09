@@ -117,6 +117,33 @@ The legacy approach uses `forAllLegacy` with a function that takes a `List<dynam
     prop.example([3, 5]); // returns false
     ```
 
+*   **`property.matrix(inputLists: List<List<dynamic>>)`**: Runs the property's predicate with *all combinations* of input values (Cartesian product). Tests every combination of values from the provided lists. This is useful for exhaustive testing of small input domains (e.g., enum values, edge cases).
+
+    ```dart
+    final prop = Property((List<dynamic> args) {
+        final a = args[0] as int;
+        final b = args[1] as int;
+        return a + b >= 0;
+    });
+    // Tests all combinations: (1,2), (1,3), (2,2), (2,3), (3,2), (3,3)
+    prop.matrix([[1, 2, 3], [2, 3]]);
+    
+    // Works with any number of arguments
+    final prop3 = Property((List<dynamic> args) {
+        final a = args[0] as int;
+        final b = args[1] as int;
+        final c = args[2] as int;
+        return a + b + c >= 0;
+    });
+    // Tests all 2*2*2 = 8 combinations
+    prop3.matrix([[1, 2], [3, 4], [5, 6]]);
+    ```
+
+    **Comparison with other methods:**
+    - **`.forAll(generators)`**: Randomly generates values using generators (non-deterministic, may miss edge cases)
+    - **`.example(args)`**: Tests a single specific combination
+    - **`.matrix(inputLists)`**: Tests ALL combinations (exhaustive, deterministic, good for small domains)
+
 ## Defining and Running Properties with `forAll(...)` (Standalone Function)
 
 *   **`forAll<TArgs extends List<dynamic>>(predicate: (List<dynamic> args) => bool | void, gens: List<Arbitrary<dynamic>>)`**: This is the most common and concise way to define and immediately check a property. It implicitly creates and runs the property. You don't need to manually create a `Property` object.
