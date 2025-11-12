@@ -54,7 +54,7 @@ To add `dartproptest` to your project, add it to your `pubspec.yaml`:
 
 ```yaml
 dev_dependencies:
-  dartproptest: ^0.1.0
+  dartproptest: ^0.2.0
 ```
 
 Then run:
