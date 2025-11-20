@@ -639,11 +639,8 @@ void main() {
           );
           fail('Expected Exception to be thrown');
         } on Exception catch (e) {
-          expect(e.toString(), contains('Property failed with args'));
-          expect(
-              e.toString(),
-              contains(
-                  'type \'String\' is not a subtype of type \'int\'')); // Type mismatch error
+          // With shrinking, the error message format has changed
+          expect(e.toString(), contains('property failed'));
           expect(
               e.toString(),
               contains(
@@ -665,13 +662,224 @@ void main() {
           );
           fail('Expected Exception to be thrown');
         } on Exception catch (e) {
-          expect(e.toString(), contains('Property failed with arguments'));
+          // With shrinking, the error message format has changed
+          expect(e.toString(), contains('property failed'));
           expect(
-              e.toString(), contains('arg0')); // Should show argument details
-          expect(
-              e.toString(), contains('arg1')); // Should show argument details
+              e.toString(),
+              contains(
+                  'type \'String\' is not a subtype of type \'int\'')); // Type mismatch error
         }
       });
+    });
+  });
+
+  group('Shrinking behavior', () {
+    test('forAll shrinks single integer argument towards zero', () {
+      expect(
+        () => forAll(
+          (int value) {
+            throw Exception('fail $value');
+          },
+          [Gen.interval(-5, 5)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink towards 0 (might be 0, or very close to 0)
+              // The key is that shrinking happened
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking):') &&
+                  errorStr.contains('shrinking found simpler failing arg');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAll shrinks multiple integer arguments towards zeros', () {
+      expect(
+        () => forAll(
+          (int a, int b) {
+            throw Exception('fail $a,$b');
+          },
+          [Gen.interval(-5, 5), Gen.interval(-5, 5)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink towards [0, 0] (might be exactly that or close)
+              // The key is that shrinking happened
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking):') &&
+                  errorStr.contains('shrinking found simpler failing arg');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAllTyped shrinks arguments and reports typed context', () {
+      final typedFunc = TypedFunction.twoArgs(
+          (int a, int b) => throw Exception('fail $a,$b'));
+      expect(
+        () => forAllTyped(
+          typedFunc,
+          [Gen.interval(-5, 5), Gen.interval(-5, 5)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink and include typed context
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking):') &&
+                  errorStr.contains('Typed arguments:') &&
+                  errorStr.contains('int arg0') &&
+                  errorStr.contains('int arg1');
+            },
+          ),
+        ),
+      );
+    });
+
+    test(
+        'forAll shrinks to non-zero minimal value when property fails above threshold',
+        () {
+      expect(
+        () => forAll(
+          (int value) {
+            if (value > 3) {
+              throw Exception('fail $value');
+            }
+          },
+          [Gen.interval(0, 10)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink to 4 (the minimal value that fails)
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking): [4]') &&
+                  errorStr.contains('shrinking found simpler failing arg');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAll shrinks multiple arguments to non-zero minimal values', () {
+      expect(
+        () => forAll(
+          (int a, int b) {
+            if (a + b > 5) {
+              throw Exception('fail $a,$b');
+            }
+          },
+          [Gen.interval(0, 10), Gen.interval(0, 10)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink to minimal values where a + b > 5
+              // The exact values depend on shrinker, but should be small (like [3, 3] or [4, 2] or [6, 0])
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking):') &&
+                  errorStr.contains('shrinking found simpler failing arg') &&
+                  // Verify it's not [0, 0] - should be non-zero
+                  !errorStr.contains(
+                      'property failed (simplest args found by shrinking): [0, 0]');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAll shrinks to positive minimal value from negative range', () {
+      expect(
+        () => forAll(
+          (int value) {
+            if (value >= 2) {
+              throw Exception('fail $value');
+            }
+          },
+          [Gen.interval(-10, 10)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink to 2 (the minimal positive value that fails)
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking): [2]') &&
+                  errorStr.contains('shrinking found simpler failing arg');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAllTyped shrinks to non-zero values with typed context', () {
+      final typedFunc = TypedFunction.oneArg((int value) {
+        if (value > 3) {
+          throw Exception('fail $value');
+        }
+      });
+      expect(
+        () => forAllTyped(
+          typedFunc,
+          [Gen.interval(0, 10)],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Should shrink to 4 and include typed context
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking): [4]') &&
+                  errorStr.contains('Typed arguments:') &&
+                  errorStr.contains('int arg0');
+            },
+          ),
+        ),
+      );
+    });
+
+    test('forAll shrinks list argument down to empty list', () {
+      expect(
+        () => forAll(
+          (List<int> values) => throw Exception('fail $values'),
+          [
+            Gen.array(
+              Gen.interval(0, 5),
+              minLength: 0,
+              maxLength: 3,
+            )
+          ],
+          numRuns: 10,
+        ),
+        throwsA(
+          predicate(
+            (Object error) {
+              final errorStr = error.toString();
+              // Argument list should shrink to []
+              return errorStr.contains(
+                      'property failed (simplest args found by shrinking): [[]]') &&
+                  errorStr.contains('shrinking found simpler failing arg');
+            },
+          ),
+        ),
+      );
     });
   });
 }
