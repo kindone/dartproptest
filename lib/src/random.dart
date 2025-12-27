@@ -49,12 +49,10 @@ class Random {
             : initialSeed,
         _seedValue = initialSeed.isEmpty
             ? DateTime.now().millisecondsSinceEpoch
-            : int.tryParse(initialSeed) ??
-                DateTime.now().millisecondsSinceEpoch,
+            : int.tryParse(initialSeed) ?? initialSeed.hashCode,
         _random = math.Random(initialSeed.isEmpty
             ? DateTime.now().millisecondsSinceEpoch
-            : int.tryParse(initialSeed) ??
-                DateTime.now().millisecondsSinceEpoch) {
+            : int.tryParse(initialSeed) ?? initialSeed.hashCode) {
     _useCount = useCount;
     // Discard the specified number of values to restore state
     for (int i = 0; i < useCount; i++) {
