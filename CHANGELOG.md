@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1] - 2025-12-27
+
+### Added
+- Async property testing: `forAllAsync` and `forAllAsyncSimple` functions for testing async properties with automatic `Future` awaiting
+- Async stateful testing: `AsyncSimpleAction` and `AsyncAction` classes for stateful testing with async operations
+
+### Fixed
+- Test stability: Fixed flaky tests in `variadic_test.dart` by making optional shrinking message checks optional
+- Seed reproducibility: Fixed `Random` class to use `hashCode` for non-numeric string seeds instead of timestamps
+
+### Changed
+- Relaxed shrinking test expectations to check for general shrinking messages rather than specific intermediate steps
 
 ## [0.2.0] - 2025-11-09
 

@@ -16,32 +16,18 @@ Consider verifying a round-trip property for a custom parser/serializer:
 ```dart
 import 'package:dartproptest/dartproptest.dart';
 
-void main() {
-  test('should preserve data after serializing and parsing', () {
-    // Generator for keys (non-empty strings without '&' or '=')
-    final keyGen = Gen.asciiString(minLength: 1, maxLength: 10).filter((s) => 
-        s.isNotEmpty && !s.contains('&') && !s.contains('='));
-    // Generator for arbitrary string values
-    final valueGen = Gen.asciiString(minLength: 0, maxLength: 10);
-    // Generator for objects (dictionaries) with our specific keys and values
-    final dataObjectGen = Gen.dictionary(keyGen, valueGen, minSize: 0, maxSize: 10);
+test('should preserve data after serializing and parsing', () {
+  final dataGen = Gen.dictionary(
+    Gen.asciiString(minLength: 1, maxLength: 10),
+    Gen.asciiString(minLength: 0, maxLength: 10),
+  );
 
-// forAll executes the property check with generated data objects (main approach)
-forAll(
-  (Map<String, String> originalData) {
-    // Perform the round trip: serialize then parse
-    final serialized = serializeMyDataFormat(originalData);
-    final parsedData = parseMyDataFormat(serialized);
-
-    // Property: The parsed data must deep-equal the original data object.
-    expect(parsedData, equals(originalData));
-    return true; // Property passed
-  },
-  [dataObjectGen], // Use the dictionary generator
-);
-    // dartproptest runs this property multiple times with diverse data objects.
-  });
-}
+  forAll((Map<String, String> data) {
+    final serialized = serializeMyDataFormat(data);
+    final parsed = parseMyDataFormat(serialized);
+    expect(parsed, equals(data));
+  }, [dataGen]);
+});
 ```
 
 This PBT approach facilitates the discovery of edge cases and intricate bugs that might be neglected by traditional, example-driven testing methodologies.
@@ -54,7 +40,7 @@ To add `dartproptest` to your project, add it to your `pubspec.yaml`:
 
 ```yaml
 dev_dependencies:
-  dartproptest: ^0.2.0
+  dartproptest: ^0.2.1
 ```
 
 Then run:

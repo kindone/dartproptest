@@ -34,8 +34,9 @@ void main() {
       final iterator = shrinks.iterator();
       expect(iterator.hasNext(), equals(true));
       final firstShrink = iterator.next();
-      expect(firstShrink.value, equals(0)); // Prepend 0 first, then binary search
-      
+      expect(
+          firstShrink.value, equals(0)); // Prepend 0 first, then binary search
+
       expect(iterator.hasNext(), equals(true));
       final secondShrink = iterator.next();
       expect(secondShrink.value, equals(4)); // 8 / 2
@@ -157,7 +158,8 @@ void main() {
         final shrinkable = shrinkableFloat(value);
         final shrinks = shrinkable.shrinks();
 
-        expect(shrinks.isEmpty(), isFalse, reason: '$value should have shrinks');
+        expect(shrinks.isEmpty(), isFalse,
+            reason: '$value should have shrinks');
         final iterator = shrinks.iterator();
         expect(iterator.next().value, equals(0.0)); // Prepended zero
 

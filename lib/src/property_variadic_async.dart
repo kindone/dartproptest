@@ -54,8 +54,8 @@ Future<bool> forAllAsync<T>(
       continue;
     } catch (e) {
       // Attempt to shrink the failing arguments
-      final shrinkResult =
-          await _shrinkFailingArgsAsync<dynamic>(func, generators, savedRandom, e);
+      final shrinkResult = await _shrinkFailingArgsAsync<dynamic>(
+          func, generators, savedRandom, e);
       throw Exception(
           'Property failed with args: ${shrinkResult.args}\nError: $e');
     }

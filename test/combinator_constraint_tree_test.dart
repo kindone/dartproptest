@@ -334,7 +334,8 @@ void main() {
                 'accumulate tree structure should match one of the accepted variants');
       } else {
         expect(actualSerialized, equals(expectedSerialized),
-            reason: 'accumulate tree structure should match expected structure');
+            reason:
+                'accumulate tree structure should match expected structure');
       }
 
       // Verify constraint: length constraints and element constraints

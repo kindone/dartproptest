@@ -571,7 +571,8 @@ void main() {
       }, [gen]);
     });
 
-    test('permutation generator: produces valid permutations for fixed items', () {
+    test('permutation generator: produces valid permutations for fixed items',
+        () {
       final gen = Gen.permutation([0, 1, 2, 3]);
       forAllLegacy((List<dynamic> args) {
         final perm = args[0] as List<int>;
@@ -613,8 +614,6 @@ void main() {
         expect(firstInv <= rootInv, isTrue);
       }
     });
-
-    
 
     test('accumulate with increasing numbers', () {
       // Generate arrays where each number is >= the previous one

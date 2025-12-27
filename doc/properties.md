@@ -80,6 +80,64 @@ The main `forAll` function is designed to be Flutter-compatible by default, usin
 
 When using `forAll` in Flutter environments, argument count and type mismatches will result in `NoSuchMethodError` wrapped in an `Exception`, rather than custom validation errors. This is the expected behavior and provides clear error messages for debugging.
 
+## Async Property Testing
+
+`dartproptest` supports testing async properties using `forAllAsync` and `forAllAsyncSimple`. These functions work with `async`/`await` functions and automatically await `Future` results.
+
+### Async Functions
+
+- `forAllAsync<T>(func, generators, {numRuns, seed})` - Main async function for any number of arguments (supports shrinking)
+- `forAllAsyncSimple<T>(func, generators, {numRuns, seed})` - Simplified async version without shrinking
+
+### Examples
+
+```dart
+// Basic async property test
+test('async property', () async {
+  await forAllAsync(
+    (int a, int b) async {
+      await Future.delayed(Duration.zero);
+      return a + b == b + a;
+    },
+    [Gen.interval(0, 100), Gen.interval(0, 100)],
+  );
+});
+
+// With seed for reproducibility
+test('async property with seed', () async {
+  await forAllAsync(
+    (int a) async => a * a >= 0,
+    [Gen.interval(-100, 100)],
+    seed: 'test-seed',
+  );
+});
+
+// Using forAllAsyncSimple
+test('async simple property', () async {
+  await forAllAsyncSimple(
+    (int a) async => a >= 0,
+    [Gen.interval(0, 100)],
+  );
+});
+```
+
+### Features
+
+- **Automatic awaiting**: `forAllAsync` automatically detects and awaits `Future` results
+- **Seed reproducibility**: String seeds are supported and produce deterministic results
+- **Shrinking support**: `forAllAsync` includes shrinking for failed test cases (like synchronous `forAll`)
+- **Platform compatibility**: Works across all Dart platforms including Flutter
+- **Same API**: Uses the same generator system and parameter structure as synchronous `forAll`
+
+### When to Use Async Properties
+
+Use async property testing when:
+- Testing functions that perform I/O operations (file, network, database)
+- Verifying async stateful operations
+- Testing Flutter widgets or async business logic
+- Validating concurrent operations
+- Testing time-dependent behaviors
+
 ## Legacy Property Testing
 
 The legacy approach uses `forAllLegacy` with a function that takes a `List<dynamic>` and requires manual argument unpacking. This approach is deprecated in favor of the new `forAll` function.

@@ -70,11 +70,11 @@ void main() {
     });
 
     test('Async actions work with generators', () async {
-      final addActionGen = Gen.interval(1, 100).map((val) =>
-          AsyncAction<List<int>, int>((obj, model) async {
-            await Future.delayed(Duration(milliseconds: 1));
-            obj.add(val);
-          }, 'add_$val'));
+      final addActionGen = Gen.interval(1, 100)
+          .map((val) => AsyncAction<List<int>, int>((obj, model) async {
+                await Future.delayed(Duration(milliseconds: 1));
+                obj.add(val);
+              }, 'add_$val'));
 
       final rand = Random();
       final action = addActionGen.generate(rand).value;

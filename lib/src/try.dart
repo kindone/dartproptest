@@ -53,7 +53,7 @@ class Try<T> {
       final transformed = errorTransformer(_error!);
       if (transformed is Exception) {
         throw transformed;
-    }
+      }
       throw Exception(transformed.toString());
     }
     final err = _error!;

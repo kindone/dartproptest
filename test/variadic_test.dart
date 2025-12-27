@@ -11,20 +11,26 @@ void main() {
 
     test('forAll with two arguments', () {
       expect(() {
-        forAll((int a, int b) => a + b == b + a, [
-          Gen.interval(0, 100),
-          Gen.interval(0, 100),
-        ], numRuns: 10);
+        forAll(
+            (int a, int b) => a + b == b + a,
+            [
+              Gen.interval(0, 100),
+              Gen.interval(0, 100),
+            ],
+            numRuns: 10);
       }, returnsNormally);
     });
 
     test('forAll with three arguments', () {
       expect(() {
-        forAll((int a, int b, int c) => (a + b) + c == a + (b + c), [
-          Gen.interval(0, 50),
-          Gen.interval(0, 50),
-          Gen.interval(0, 50),
-        ], numRuns: 10);
+        forAll(
+            (int a, int b, int c) => (a + b) + c == a + (b + c),
+            [
+              Gen.interval(0, 50),
+              Gen.interval(0, 50),
+              Gen.interval(0, 50),
+            ],
+            numRuns: 10);
       }, returnsNormally);
     });
 
@@ -50,28 +56,37 @@ void main() {
 
     test('forAllSimple with single argument', () {
       expect(() {
-        forAllSimple((int a) => a * a >= 0, [
-          Gen.interval(-100, 100),
-        ], numRuns: 10);
+        forAllSimple(
+            (int a) => a * a >= 0,
+            [
+              Gen.interval(-100, 100),
+            ],
+            numRuns: 10);
       }, returnsNormally);
     });
 
     test('forAllSimple with two arguments', () {
       expect(() {
-        forAllSimple((int a, int b) => a + b == b + a, [
-          Gen.interval(0, 100),
-          Gen.interval(0, 100),
-        ], numRuns: 10);
+        forAllSimple(
+            (int a, int b) => a + b == b + a,
+            [
+              Gen.interval(0, 100),
+              Gen.interval(0, 100),
+            ],
+            numRuns: 10);
       }, returnsNormally);
     });
 
     test('forAllSimple with three arguments', () {
       expect(() {
-        forAllSimple((int a, int b, int c) => (a + b) + c == a + (b + c), [
-          Gen.interval(0, 50),
-          Gen.interval(0, 50),
-          Gen.interval(0, 50),
-        ], numRuns: 10);
+        forAllSimple(
+            (int a, int b, int c) => (a + b) + c == a + (b + c),
+            [
+              Gen.interval(0, 50),
+              Gen.interval(0, 50),
+              Gen.interval(0, 50),
+            ],
+            numRuns: 10);
       }, returnsNormally);
     });
 
@@ -757,10 +772,13 @@ void main() {
         (int a, int b) => throw Exception('fail $a,$b'),
       );
       expect(
-        () => forAllTyped(typedFunc, [
-          Gen.interval(-5, 5),
-          Gen.interval(-5, 5),
-        ], numRuns: 10),
+        () => forAllTyped(
+            typedFunc,
+            [
+              Gen.interval(-5, 5),
+              Gen.interval(-5, 5),
+            ],
+            numRuns: 10),
         throwsA(
           predicate((Object error) {
             final errorStr = error.toString();
